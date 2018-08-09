@@ -1,6 +1,7 @@
 package lexer
 
 import (
+	"github.com/stretchr/testify/assert"
 	"go_interpreter/token"
 	"testing"
 )
@@ -168,17 +169,10 @@ func testLexer(t *testing.T, input string, expectedTokens []struct {
 }) {
 	l := BuildLexer(input)
 
-	for i, expectedToken := range expectedTokens {
+	for _, expectedToken := range expectedTokens {
 		actualToken := l.NextToken()
 
-		if actualToken.Type != expectedToken.expectedType {
-			t.Fatalf("Wrong TokenType at %d: expected=%q, actual=%q",
-				i, expectedToken.expectedType, actualToken.Type)
-		}
-
-		if actualToken.Literal != expectedToken.expectedLiteral {
-			t.Fatalf("Wrong Literal at %d: expected=%q, actual=%q",
-				i, expectedToken.expectedLiteral, actualToken.Literal)
-		}
+		assert.Equal(t, actualToken.Type, expectedToken.expectedType, "TokenType")
+		assert.Equal(t, actualToken.Literal, expectedToken.expectedLiteral, "Literal")
 	}
 }
