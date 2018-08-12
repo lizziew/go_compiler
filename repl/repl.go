@@ -4,7 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"go_interpreter/lexer"
-	"go_interpreter/token"
+	"go_interpreter/parser"
 	"io"
 )
 
@@ -24,16 +24,24 @@ func StartLoop(in io.Reader, out io.Writer) {
 			return
 		}
 
-		// Feed input into lexer
+		// Lexer
 		l := lexer.BuildLexer(scanner.Text())
-		for {
-			t := l.NextToken()
 
-			if t.Type == token.EOF {
-				break
-			}
-
-			fmt.Printf("%+v\n", t)
+		// Parser
+		p := parser.BuildParser(l)
+		prog := p.ParseProgram()
+		if len(p.Errors()) != 0 {
+			printParserErrors(out, p.Errors())
+			continue
 		}
+
+		io.WriteString(out, prog.String())
+		io.WriteString(out, "\n")
+	}
+}
+
+func printParserErrors(out io.Writer, errors []string) {
+	for _, msg := range errors {
+		io.WriteString(out, "\t"+msg+"\n")
 	}
 }

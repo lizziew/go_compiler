@@ -344,7 +344,9 @@ func (p *Parser) parseInfix(left ast.Expression) ast.Expression {
 	p.GetNextToken()
 	expression.Right = p.parseExpression(precedence)
 
-	Trace.Println("      RET p.parseInfix():", expression.String())
+	if expression != nil {
+		Trace.Println("      RET p.parseInfix():", expression.String())
+	}
 	return expression
 }
 
