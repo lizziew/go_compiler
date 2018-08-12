@@ -40,6 +40,7 @@ func BuildParser(l *lexer.Lexer) *Parser {
 	p.registerPrefix(token.MINUS, p.parsePrefix)
 	p.registerPrefix(token.TRUE, p.parseBoolean)
 	p.registerPrefix(token.FALSE, p.parseBoolean)
+	p.registerPrefix(token.LPAREN, p.parseGrouped)
 
 	// Infix: Map tokens --> parsing functions
 	p.infixMap = make(map[token.TokenType]parseInfix)
@@ -144,7 +145,7 @@ func (p *Parser) getNextPrecedence() int {
 }
 
 func (p *Parser) ParseProgram() *ast.Program {
-	Trace.Println("parser.ParseProgram()")
+	Trace.Println("CALL parser.ParseProgram()")
 
 	// Construct root Node of AST
 	prog := &ast.Program{}
@@ -165,7 +166,7 @@ func (p *Parser) ParseProgram() *ast.Program {
 }
 
 func (p *Parser) parseStatement() ast.Statement {
-	Trace.Println("  parser.parseStatement()")
+	Trace.Println("  CALL parser.parseStatement()")
 
 	switch p.currentToken.Type {
 	case token.LET:
@@ -179,6 +180,7 @@ func (p *Parser) parseStatement() ast.Statement {
 
 // e.g. "let x = 5;"
 func (p *Parser) parseLetStatement() *ast.LetStatement {
+	Trace.Println("    CALL parser.parseLetStatement()")
 	// "let"
 	statement := &ast.LetStatement{Token: p.currentToken}
 
@@ -202,12 +204,13 @@ func (p *Parser) parseLetStatement() *ast.LetStatement {
 		p.GetNextToken()
 	}
 
-	Trace.Println("    parser.parseLetStatement():", statement.String())
+	Trace.Println("    RET parser.parseLetStatement():", statement.String())
 	return statement
 }
 
 // e.g. "return 5;"
 func (p *Parser) parseReturnStatement() *ast.ReturnStatement {
+	Trace.Println("    CALL parser.parseReturnStatement()")
 	// "return"
 	statement := &ast.ReturnStatement{Token: p.currentToken}
 	p.GetNextToken()
@@ -220,12 +223,13 @@ func (p *Parser) parseReturnStatement() *ast.ReturnStatement {
 		p.GetNextToken()
 	}
 
-	Trace.Println("    parser.parseReturnStatement():", statement.String())
+	Trace.Println("    RET parser.parseReturnStatement():", statement.String())
 	return statement
 }
 
 // Parse expression statements e.g. "5 + foo"
 func (p *Parser) parseExpressionStatement() *ast.ExpressionStatement {
+	Trace.Println("    CALL parser.parseExpressionStatement()")
 	// e.g. "5"
 	statement := &ast.ExpressionStatement{Token: p.currentToken}
 
@@ -237,36 +241,37 @@ func (p *Parser) parseExpressionStatement() *ast.ExpressionStatement {
 		p.GetNextToken()
 	}
 
-	Trace.Println("    parser.parseExpressionStatement():", statement.String())
+	Trace.Println("    RET parser.parseExpressionStatement():", statement.String())
 	return statement
 }
 
 // Parse expressions e.g. "5 + foo"
 func (p *Parser) parseExpression(precedence int) ast.Expression {
+	Trace.Printf("      CALL parser.parseExpression(%v)\n", precedence)
 	prefixFunc := p.prefixMap[p.currentToken.Type]
 	if prefixFunc == nil {
 		p.reportMissingPrefixFunctionError(p.currentToken.Type)
 		return nil
 	}
 
-	Trace.Printf("      parser.parseExpression(%v)\n", precedence)
-	Trace.Println("        leftExpression:", p.currentToken.Literal, p.currentToken.Type)
+	Trace.Println("      EXEC leftExpression:", p.currentToken.Literal, p.currentToken.Type)
 	leftExpression := prefixFunc()
 
 	// Tries to find infixFunc for tokens until finds token with lower precedence
 	for (p.nextToken.Type != token.SEMICOLON) && precedence < p.getNextPrecedence() {
 		infixFunc := p.infixMap[p.nextToken.Type]
 		if infixFunc == nil {
-			Trace.Println("        Was prefix function")
+			Trace.Println("      RET parser.parseExpression():", leftExpression.String())
 			return leftExpression
 		}
 
 		p.GetNextToken()
 
-		Trace.Println("        Is infix function")
+		Trace.Println("      EXEC is infix function")
 		leftExpression = infixFunc(leftExpression)
 	}
 
+	Trace.Println("      RET parser.parseExpression():", leftExpression.String())
 	return leftExpression
 }
 
@@ -289,6 +294,7 @@ func (p *Parser) parseIntegerLiteral() ast.Expression {
 
 // Parse prefix expressions e.g. "-add(1, 2)"
 func (p *Parser) parsePrefix() ast.Expression {
+	Trace.Println("      CALL p.parsePrefix()")
 	// e.g. "-"
 	expression := &ast.Prefix{Token: p.currentToken, Operator: p.currentToken.Literal}
 
@@ -297,12 +303,13 @@ func (p *Parser) parsePrefix() ast.Expression {
 	// e.g. "add(1, 2)"
 	expression.Value = p.parseExpression(PREFIX)
 
-	Trace.Println("        p.parsePrefix():", expression.String())
+	Trace.Println("      RET p.parsePrefix():", expression.String())
 	return expression
 }
 
 // Parse infix expressions e.g. "2+foo"
 func (p *Parser) parseInfix(left ast.Expression) ast.Expression {
+	Trace.Println("      CALL p.parseInfix()")
 	// e.g. "2" and "+"
 	expression := &ast.Infix{Token: p.currentToken, Operator: p.currentToken.Literal, Left: left}
 
@@ -311,11 +318,28 @@ func (p *Parser) parseInfix(left ast.Expression) ast.Expression {
 	p.GetNextToken()
 	expression.Right = p.parseExpression(precedence)
 
-	Trace.Println("        p.parseInfix():", expression.String())
+	Trace.Println("      RET p.parseInfix():", expression.String())
 	return expression
 }
 
 // Parse boolean expressions e.g. "true"
 func (p *Parser) parseBoolean() ast.Expression {
 	return &ast.Boolean{Token: p.currentToken, Value: p.currentToken.Type == token.TRUE}
+}
+
+// Parse grouped expressions e.g. "(5+5)*2"
+func (p *Parser) parseGrouped() ast.Expression {
+	Trace.Println("      CALL p.parseGrouped()")
+
+	// skip "("
+	p.GetNextToken()
+
+	expression := p.parseExpression(LOWEST)
+
+	if !p.GetExpectNextToken(token.RPAREN) {
+		return nil
+	} else {
+		Trace.Println("      RET p.parseGrouped():", expression.String())
+		return expression
+	}
 }

@@ -220,6 +220,14 @@ func TestOperatorPrecedence(t *testing.T) {
 			"a + b / c",
 			"(a + (b / c))",
 		},
+		{
+			"(5 + 5) * 2",
+			"((5 + 5) * 2)",
+		},
+		{
+			"!(true == true)",
+			"(!(true == true))",
+		},
 	}
 
 	for _, test := range tests {
