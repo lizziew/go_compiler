@@ -41,6 +41,7 @@ func BuildParser(l *lexer.Lexer) *Parser {
 	p.registerPrefix(token.TRUE, p.parseBoolean)
 	p.registerPrefix(token.FALSE, p.parseBoolean)
 	p.registerPrefix(token.LPAREN, p.parseGrouped)
+	p.registerPrefix(token.IF, p.parseIf)
 
 	// Infix: Map tokens --> parsing functions
 	p.infixMap = make(map[token.TokenType]parseInfix)
@@ -245,6 +246,26 @@ func (p *Parser) parseExpressionStatement() *ast.ExpressionStatement {
 	return statement
 }
 
+// Parse block statement
+func (p *Parser) parseBlockStatement() *ast.BlockStatement {
+	Trace.Println("      CALL parseBlockStatement()")
+	block := &ast.BlockStatement{Token: p.currentToken}
+	block.Statements = []ast.Statement{}
+
+	p.GetNextToken()
+	for p.currentToken.Type != token.RBRACE && p.currentToken.Type != token.EOF {
+		statement := p.parseStatement()
+		if statement != nil {
+			block.Statements = append(block.Statements, statement)
+		}
+
+		p.GetNextToken()
+	}
+
+	Trace.Println("      RET parser.parseBlockStatement():", block.String())
+	return block
+}
+
 // Parse expressions e.g. "5 + foo"
 func (p *Parser) parseExpression(precedence int) ast.Expression {
 	Trace.Printf("      CALL parser.parseExpression(%v)\n", precedence)
@@ -271,7 +292,9 @@ func (p *Parser) parseExpression(precedence int) ast.Expression {
 		leftExpression = infixFunc(leftExpression)
 	}
 
-	Trace.Println("      RET parser.parseExpression():", leftExpression.String())
+	if leftExpression != nil {
+		Trace.Println("      RET parser.parseExpression():", leftExpression.String())
+	}
 	return leftExpression
 }
 
@@ -331,15 +354,61 @@ func (p *Parser) parseBoolean() ast.Expression {
 func (p *Parser) parseGrouped() ast.Expression {
 	Trace.Println("      CALL p.parseGrouped()")
 
-	// skip "("
+	// "("
 	p.GetNextToken()
 
 	expression := p.parseExpression(LOWEST)
 
+	// ")"
 	if !p.GetExpectNextToken(token.RPAREN) {
 		return nil
 	} else {
 		Trace.Println("      RET p.parseGrouped():", expression.String())
 		return expression
 	}
+}
+
+// Parse if expressions e.g. "if (4 < 5) { x } else { y }"
+func (p *Parser) parseIf() ast.Expression {
+	Trace.Println("      CALL p.parseIf()")
+	// "if"
+	expression := &ast.If{Token: p.currentToken}
+
+	// "("
+	if !p.GetExpectNextToken(token.LPAREN) {
+		return nil
+	}
+
+	// e.g. "4 < 5"
+	p.GetNextToken()
+	expression.Condition = p.parseExpression(LOWEST)
+
+	// ")"
+	if !p.GetExpectNextToken(token.RPAREN) {
+		return nil
+	}
+
+	// "{"
+	if !p.GetExpectNextToken(token.LBRACE) {
+		return nil
+	}
+
+	// e.g. "x"
+	expression.Consequence = p.parseBlockStatement()
+
+	// else
+	if p.nextToken.Type == token.ELSE {
+		p.GetNextToken()
+
+		// {
+		if !p.GetExpectNextToken(token.LBRACE) {
+			return nil
+		}
+
+		// e.g. "y"
+		expression.Alternative = p.parseBlockStatement()
+	}
+
+	Trace.Println("      RET p.parseIf():", expression.String())
+	return expression
 }

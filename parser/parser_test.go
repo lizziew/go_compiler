@@ -241,6 +241,89 @@ func TestOperatorPrecedence(t *testing.T) {
 	}
 }
 
+func TestIfExpression(t *testing.T) {
+	input := `if (x < y) { x }`
+
+	l := lexer.BuildLexer(input)
+	p := BuildParser(l)
+	prog := p.ParseProgram()
+
+	checkParserErrors(t, p)
+
+	assert.Equal(t, 1, len(prog.Statements), "Expected number of statements")
+
+	statement, ok := prog.Statements[0].(*ast.ExpressionStatement)
+	if !ok {
+		t.Fatalf("Expected Statement type: ExpressionStatement, actual: %T", prog.Statements[0])
+	}
+
+	expression, ok := statement.Expression.(*ast.If)
+	if !ok {
+		t.Fatalf("Expected Expression type: If, actual: %T", statement.Expression)
+	}
+
+	// Test condition
+	testInfix(t, expression.Condition, "x", "<", "y")
+
+	// Test consequence
+	assert.Equal(t, len(expression.Consequence.Statements), 1,
+		"Expected number of Consequence statements")
+
+	consequence, ok := expression.Consequence.Statements[0].(*ast.ExpressionStatement)
+	if !ok {
+		t.Fatalf("Expected Statement Type: ExpressionStatement, actual: %T",
+			expression.Consequence.Statements[0])
+	}
+
+	testIdentifier(t, consequence.Expression, "x")
+
+	// Test alternative
+	if expression.Alternative != nil {
+		t.Fatalf("Alternative should be empty")
+	}
+}
+
+func TestIfElseExpression(t *testing.T) {
+	input := `if (x < y) { x } else { y }`
+
+	l := lexer.BuildLexer(input)
+	p := BuildParser(l)
+	prog := p.ParseProgram()
+
+	checkParserErrors(t, p)
+
+	// Test condition
+	assert.Equal(t, 1, len(prog.Statements), "Expected number of statements")
+	statement, ok := prog.Statements[0].(*ast.ExpressionStatement)
+	if !ok {
+		t.Fatalf("program.Statements[0] is not ast.ExpressionStatement. got=%T",
+			prog.Statements[0])
+	}
+	expression, ok := statement.Expression.(*ast.If)
+	if !ok {
+		t.Fatalf("stmt.Expression is not ast.IfExpression. got=%T", statement.Expression)
+	}
+	testInfix(t, expression.Condition, "x", "<", "y")
+
+	// Test consequence
+	assert.Equal(t, 1, len(expression.Consequence.Statements), "Expected number of statements")
+	consequence, ok := expression.Consequence.Statements[0].(*ast.ExpressionStatement)
+	if !ok {
+		t.Fatalf("Statements[0] is not ast.ExpressionStatement. got=%T",
+			expression.Consequence.Statements[0])
+	}
+	testIdentifier(t, consequence.Expression, "x")
+
+	// Test alternative
+	assert.Equal(t, 1, len(expression.Alternative.Statements), "Expected number of statements")
+	alternative, ok := expression.Alternative.Statements[0].(*ast.ExpressionStatement)
+	if !ok {
+		t.Fatalf("Statements[0] is not ast.ExpressionStatement. got=%T",
+			expression.Alternative.Statements[0])
+	}
+	testIdentifier(t, alternative.Expression, "y")
+}
+
 // Helper method for checking parser errors
 func checkParserErrors(t *testing.T, p *Parser) {
 	errors := p.Errors()
