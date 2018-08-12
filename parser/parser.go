@@ -5,8 +5,12 @@ import (
 	"go_interpreter/ast"
 	"go_interpreter/lexer"
 	"go_interpreter/token"
+	"log"
+	"os"
 	"strconv"
 )
+
+var Trace *log.Logger
 
 // Top down operator precedence parser builds AST out of tokens
 type Parser struct {
@@ -34,6 +38,8 @@ func BuildParser(l *lexer.Lexer) *Parser {
 	p.registerPrefix(token.INT, p.parseIntegerLiteral)
 	p.registerPrefix(token.BANG, p.parsePrefix)
 	p.registerPrefix(token.MINUS, p.parsePrefix)
+	p.registerPrefix(token.TRUE, p.parseBoolean)
+	p.registerPrefix(token.FALSE, p.parseBoolean)
 
 	// Infix: Map tokens --> parsing functions
 	p.infixMap = make(map[token.TokenType]parseInfix)
@@ -45,6 +51,9 @@ func BuildParser(l *lexer.Lexer) *Parser {
 	p.registerInfix(token.NOT_EQ, p.parseInfix)
 	p.registerInfix(token.LT, p.parseInfix)
 	p.registerInfix(token.GT, p.parseInfix)
+
+	// Logger (for debugging): os.Stdout or ioutil.Discard
+	Trace = log.New(os.Stdout, "TRACE: ", log.Ldate|log.Ltime|log.Lshortfile)
 
 	return p
 }
@@ -135,6 +144,8 @@ func (p *Parser) getNextPrecedence() int {
 }
 
 func (p *Parser) ParseProgram() *ast.Program {
+	Trace.Println("parser.ParseProgram()")
+
 	// Construct root Node of AST
 	prog := &ast.Program{}
 	prog.Statements = []ast.Statement{}
@@ -154,6 +165,8 @@ func (p *Parser) ParseProgram() *ast.Program {
 }
 
 func (p *Parser) parseStatement() ast.Statement {
+	Trace.Println("  parser.parseStatement()")
+
 	switch p.currentToken.Type {
 	case token.LET:
 		return p.parseLetStatement()
@@ -180,11 +193,16 @@ func (p *Parser) parseLetStatement() *ast.LetStatement {
 		return nil
 	}
 
-	// TODO: skip expression for now, e.g. "5"
+	// e.g. "5"
+	p.GetNextToken()
+	statement.Value = p.parseExpression(LOWEST)
+
+	// ";"
 	for p.currentToken.Type != token.SEMICOLON {
 		p.GetNextToken()
 	}
 
+	Trace.Println("    parser.parseLetStatement():", statement.String())
 	return statement
 }
 
@@ -192,13 +210,17 @@ func (p *Parser) parseLetStatement() *ast.LetStatement {
 func (p *Parser) parseReturnStatement() *ast.ReturnStatement {
 	// "return"
 	statement := &ast.ReturnStatement{Token: p.currentToken}
-
-	// TODO: skip expression for now, e.g. "5"
 	p.GetNextToken()
+
+	// e.g. "5"
+	statement.Value = p.parseExpression(LOWEST)
+
+	// ";"
 	for p.currentToken.Type != token.SEMICOLON {
 		p.GetNextToken()
 	}
 
+	Trace.Println("    parser.parseReturnStatement():", statement.String())
 	return statement
 }
 
@@ -215,6 +237,7 @@ func (p *Parser) parseExpressionStatement() *ast.ExpressionStatement {
 		p.GetNextToken()
 	}
 
+	Trace.Println("    parser.parseExpressionStatement():", statement.String())
 	return statement
 }
 
@@ -226,17 +249,21 @@ func (p *Parser) parseExpression(precedence int) ast.Expression {
 		return nil
 	}
 
+	Trace.Printf("      parser.parseExpression(%v)\n", precedence)
+	Trace.Println("        leftExpression:", p.currentToken.Literal, p.currentToken.Type)
 	leftExpression := prefixFunc()
 
 	// Tries to find infixFunc for tokens until finds token with lower precedence
 	for (p.nextToken.Type != token.SEMICOLON) && precedence < p.getNextPrecedence() {
 		infixFunc := p.infixMap[p.nextToken.Type]
 		if infixFunc == nil {
+			Trace.Println("        Was prefix function")
 			return leftExpression
 		}
 
 		p.GetNextToken()
 
+		Trace.Println("        Is infix function")
 		leftExpression = infixFunc(leftExpression)
 	}
 
@@ -270,6 +297,7 @@ func (p *Parser) parsePrefix() ast.Expression {
 	// e.g. "add(1, 2)"
 	expression.Value = p.parseExpression(PREFIX)
 
+	Trace.Println("        p.parsePrefix():", expression.String())
 	return expression
 }
 
@@ -283,5 +311,11 @@ func (p *Parser) parseInfix(left ast.Expression) ast.Expression {
 	p.GetNextToken()
 	expression.Right = p.parseExpression(precedence)
 
+	Trace.Println("        p.parseInfix():", expression.String())
 	return expression
+}
+
+// Parse boolean expressions e.g. "true"
+func (p *Parser) parseBoolean() ast.Expression {
+	return &ast.Boolean{Token: p.currentToken, Value: p.currentToken.Type == token.TRUE}
 }

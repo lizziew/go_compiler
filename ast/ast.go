@@ -202,3 +202,19 @@ func (i *Infix) String() string {
 
 	return out.String()
 }
+
+// Boolean Expression Node
+type Boolean struct {
+	Token token.Token // TRUE, FALSE
+	Value bool
+}
+
+func (b *Boolean) expressionNode() {}
+
+func (b *Boolean) TokenLiteral() string {
+	return b.Token.Literal
+}
+
+func (b *Boolean) String() string {
+	return b.Token.Literal
+}
