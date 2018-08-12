@@ -302,3 +302,32 @@ func (f *Function) String() string {
 
 	return out.String()
 }
+
+// Call Expression Node
+type Call struct {
+	Token     token.Token // token.LPAREN
+	Function  Expression  // Identifier or Function Node
+	Arguments []Expression
+}
+
+func (c *Call) expressionNode() {}
+
+func (c *Call) TokenLiteral() string {
+	return c.Token.Literal
+}
+
+func (c *Call) String() string {
+	var out bytes.Buffer
+
+	args := []string{}
+	for _, a := range c.Arguments {
+		args = append(args, a.String())
+	}
+
+	out.WriteString(c.Function.String())
+	out.WriteString("(")
+	out.WriteString(strings.Join(args, ", "))
+	out.WriteString(")")
+
+	return out.String()
+}

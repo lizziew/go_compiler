@@ -355,6 +355,34 @@ func TestFunctionExpression(t *testing.T) {
 	testInfix(t, bodyStatement.Expression, "x", "+", "y")
 }
 
+func TestCallExpression(t *testing.T) {
+	input := "add(1, 2*3, 4+5);"
+
+	l := lexer.BuildLexer(input)
+	p := BuildParser(l)
+	prog := p.ParseProgram()
+
+	checkParserErrors(t, p)
+
+	assert.Equal(t, 1, len(prog.Statements), "Expected number of statements")
+	statement, ok := prog.Statements[0].(*ast.ExpressionStatement)
+	if !ok {
+		t.Fatalf("Expected Statement type: ExpressionStatement, actual: %T", prog.Statements[0])
+	}
+	expression, ok := statement.Expression.(*ast.Call)
+	if !ok {
+		t.Fatalf("Expected Expression type: Call, actual: %T", statement.Expression)
+	}
+
+	testIdentifier(t, expression.Function, "add")
+
+	assert.Equal(t, 3, len(expression.Arguments), "Expected number of parameters")
+
+	testLiteral(t, expression.Arguments[0], 1)
+	testInfix(t, expression.Arguments[1], 2, "*", 3)
+	testInfix(t, expression.Arguments[2], 4, "+", 5)
+}
+
 // Helper method for checking parser errors
 func checkParserErrors(t *testing.T, p *Parser) {
 	errors := p.Errors()

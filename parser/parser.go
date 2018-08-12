@@ -54,6 +54,7 @@ func BuildParser(l *lexer.Lexer) *Parser {
 	p.registerInfix(token.NOT_EQ, p.parseInfix)
 	p.registerInfix(token.LT, p.parseInfix)
 	p.registerInfix(token.GT, p.parseInfix)
+	p.registerInfix(token.LPAREN, p.parseCall)
 
 	// Logger (for debugging): os.Stdout or ioutil.Discard
 	Trace = log.New(os.Stdout, "TRACE: ", log.Ldate|log.Ltime|log.Lshortfile)
@@ -126,6 +127,7 @@ var precedencesMap = map[token.TokenType]int{
 	token.MINUS:    SUM,
 	token.SLASH:    PRODUCT,
 	token.ASTERISK: PRODUCT,
+	token.LPAREN:   CALL,
 }
 
 func (p *Parser) getCurrentPrecedence() int {
@@ -471,4 +473,39 @@ func (p *Parser) parseFunctionParameters() []*ast.Identifier {
 
 	Trace.Println("      RET p.parseFunctionParameters()")
 	return identifiers
+}
+
+// Parse call expressions e.g. "add(1, 2);"
+func (p *Parser) parseCall(function ast.Expression) ast.Expression {
+	c := &ast.Call{Token: p.currentToken, Function: function}
+	c.Arguments = p.parseCallParameters()
+	return c
+}
+
+// Helper method to parse call parameters
+func (p *Parser) parseCallParameters() []ast.Expression {
+	args := []ast.Expression{}
+
+	// Empty list of parameters: already ")"
+	if p.nextToken.Type == token.RPAREN {
+		p.GetNextToken()
+		return args
+	}
+
+	// First parameter
+	p.GetNextToken()
+	args = append(args, p.parseExpression(LOWEST))
+
+	for p.nextToken.Type == token.COMMA {
+		p.GetNextToken()
+		p.GetNextToken()
+
+		args = append(args, p.parseExpression(LOWEST))
+	}
+
+	if !p.GetExpectNextToken(token.RPAREN) {
+		return nil
+	}
+
+	return args
 }
