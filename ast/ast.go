@@ -3,6 +3,7 @@ package ast
 import (
 	"bytes"
 	"go_interpreter/token"
+	"strings"
 )
 
 // Node of AST
@@ -267,6 +268,37 @@ func (i *If) String() string {
 		out.WriteString("else ")
 		out.WriteString(i.Alternative.String())
 	}
+
+	return out.String()
+}
+
+// Function Expression Node
+type Function struct {
+	Token      token.Token // token.FUNCTION
+	Parameters []*Identifier
+	Body       *BlockStatement
+}
+
+func (f *Function) expressionNode() {}
+
+func (f *Function) TokenLiteral() string {
+	return f.Token.Literal
+}
+
+func (f *Function) String() string {
+	var out bytes.Buffer
+
+	parameters := []string{}
+	for _, p := range f.Parameters {
+		parameters = append(parameters, p.String())
+	}
+
+	out.WriteString(f.TokenLiteral())
+	out.WriteString("(")
+	out.WriteString(strings.Join(parameters, ", "))
+	out.WriteString(")")
+
+	out.WriteString(f.Body.String())
 
 	return out.String()
 }

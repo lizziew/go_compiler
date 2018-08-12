@@ -42,6 +42,7 @@ func BuildParser(l *lexer.Lexer) *Parser {
 	p.registerPrefix(token.FALSE, p.parseBoolean)
 	p.registerPrefix(token.LPAREN, p.parseGrouped)
 	p.registerPrefix(token.IF, p.parseIf)
+	p.registerPrefix(token.FUNCTION, p.parseFunction)
 
 	// Infix: Map tokens --> parsing functions
 	p.infixMap = make(map[token.TokenType]parseInfix)
@@ -411,4 +412,63 @@ func (p *Parser) parseIf() ast.Expression {
 
 	Trace.Println("      RET p.parseIf():", expression.String())
 	return expression
+}
+
+// Parse function expressions e.g. "f(x, y) { x + y; }"
+func (p *Parser) parseFunction() ast.Expression {
+	Trace.Println("      CALL p.parseFunction()")
+	// "f"
+	f := &ast.Function{Token: p.currentToken}
+
+	// "("
+	if !p.GetExpectNextToken(token.LPAREN) {
+		return nil
+	}
+
+	// e.g. "x, y"
+	f.Parameters = p.parseFunctionParameters()
+
+	// e.g. "{"
+	if !p.GetExpectNextToken(token.LBRACE) {
+		return nil
+	}
+
+	f.Body = p.parseBlockStatement()
+
+	Trace.Println("      RET p.parseFunction():", f.String())
+	return f
+}
+
+// Helper method to parse function parameters
+func (p *Parser) parseFunctionParameters() []*ast.Identifier {
+	Trace.Println("      CALL p.parseFunctionParameters()")
+	identifiers := []*ast.Identifier{}
+
+	// Empty list of parameters: already ")"
+	if p.nextToken.Type == token.RPAREN {
+		p.GetNextToken()
+		return identifiers
+	}
+
+	// First parameter
+	p.GetNextToken()
+	i := &ast.Identifier{Token: p.currentToken, Value: p.currentToken.Literal}
+	identifiers = append(identifiers, i)
+
+	// Other parameters
+	for p.nextToken.Type == token.COMMA {
+		p.GetNextToken()
+		p.GetNextToken()
+
+		i := &ast.Identifier{Token: p.currentToken, Value: p.currentToken.Literal}
+		identifiers = append(identifiers, i)
+	}
+
+	// ")"
+	if !p.GetExpectNextToken(token.RPAREN) {
+		return nil
+	}
+
+	Trace.Println("      RET p.parseFunctionParameters()")
+	return identifiers
 }

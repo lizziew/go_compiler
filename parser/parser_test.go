@@ -324,6 +324,37 @@ func TestIfElseExpression(t *testing.T) {
 	testIdentifier(t, alternative.Expression, "y")
 }
 
+func TestFunctionExpression(t *testing.T) {
+	input := `fn(x, y) { x + y; }`
+
+	l := lexer.BuildLexer(input)
+	p := BuildParser(l)
+	prog := p.ParseProgram()
+
+	checkParserErrors(t, p)
+
+	assert.Equal(t, 1, len(prog.Statements), "Expected number of statements")
+	statement, ok := prog.Statements[0].(*ast.ExpressionStatement)
+	if !ok {
+		t.Fatalf("Expected Statement type: ExpressionStatement, actual: %T", prog.Statements[0])
+	}
+	function, ok := statement.Expression.(*ast.Function)
+	if !ok {
+		t.Fatalf("Expected Expression type: Function, actual: %T", statement.Expression)
+	}
+	assert.Equal(t, 2, len(function.Parameters), "Expected number of parameters")
+	testLiteral(t, function.Parameters[0], "x")
+	testLiteral(t, function.Parameters[1], "y")
+
+	assert.Equal(t, 1, len(function.Body.Statements), "Expected number of body statements")
+	bodyStatement, ok := function.Body.Statements[0].(*ast.ExpressionStatement)
+	if !ok {
+		t.Fatalf("Expected function body statement type: ExpressionStatement")
+	}
+
+	testInfix(t, bodyStatement.Expression, "x", "+", "y")
+}
+
 // Helper method for checking parser errors
 func checkParserErrors(t *testing.T, p *Parser) {
 	errors := p.Errors()
