@@ -2,6 +2,7 @@ package parser
 
 import (
 	"fmt"
+	"github.com/fatih/color"
 	"go_interpreter/ast"
 	"go_interpreter/lexer"
 	"go_interpreter/token"
@@ -59,7 +60,7 @@ func (p *Parser) GetNextToken() {
 	p.currentToken = p.nextToken
 	p.nextToken = p.l.NextToken()
 
-	fmt.Println("Current token:", p.currentToken)
+	color.Red("Current token: %s", p.currentToken)
 }
 
 func (p *Parser) GetExpectNextToken(t token.TokenType) bool {
@@ -144,7 +145,7 @@ func (p *Parser) getNextPrecedence() int {
 }
 
 func (p *Parser) ParseProgram() *ast.Program {
-	fmt.Println("CALL parser.ParseProgram()")
+	color.Cyan("CALL parser.ParseProgram()")
 
 	// Construct root Node of AST
 	prog := &ast.Program{}
@@ -165,7 +166,7 @@ func (p *Parser) ParseProgram() *ast.Program {
 }
 
 func (p *Parser) parseStatement() ast.Statement {
-	fmt.Println("  CALL parser.parseStatement()")
+	color.Cyan("  CALL parser.parseStatement()")
 
 	switch p.currentToken.Type {
 	case token.LET:
@@ -179,7 +180,7 @@ func (p *Parser) parseStatement() ast.Statement {
 
 // e.g. "let x = 5;"
 func (p *Parser) parseLetStatement() *ast.LetStatement {
-	fmt.Println("    CALL parser.parseLetStatement()")
+	color.Cyan("    CALL parser.parseLetStatement()")
 	// "let"
 	statement := &ast.LetStatement{Token: p.currentToken}
 
@@ -203,13 +204,13 @@ func (p *Parser) parseLetStatement() *ast.LetStatement {
 		p.GetNextToken()
 	}
 
-	fmt.Println("    RET parser.parseLetStatement():", statement.String())
+	color.Blue("    RET parser.parseLetStatement():%s", statement.String())
 	return statement
 }
 
 // e.g. "return 5;"
 func (p *Parser) parseReturnStatement() *ast.ReturnStatement {
-	fmt.Println("    CALL parser.parseReturnStatement()")
+	color.Cyan("    CALL parser.parseReturnStatement()")
 	// "return"
 	statement := &ast.ReturnStatement{Token: p.currentToken}
 	p.GetNextToken()
@@ -222,13 +223,13 @@ func (p *Parser) parseReturnStatement() *ast.ReturnStatement {
 		p.GetNextToken()
 	}
 
-	fmt.Println("    RET parser.parseReturnStatement():", statement.String())
+	color.Blue("    RET parser.parseReturnStatement():%s", statement.String())
 	return statement
 }
 
 // Parse expression statements e.g. "5 + foo"
 func (p *Parser) parseExpressionStatement() *ast.ExpressionStatement {
-	fmt.Println("    CALL parser.parseExpressionStatement()")
+	color.Cyan("    CALL parser.parseExpressionStatement()")
 	// e.g. "5"
 	statement := &ast.ExpressionStatement{Token: p.currentToken}
 
@@ -240,13 +241,13 @@ func (p *Parser) parseExpressionStatement() *ast.ExpressionStatement {
 		p.GetNextToken()
 	}
 
-	fmt.Println("    RET parser.parseExpressionStatement():", statement.String())
+	color.Blue("    RET parser.parseExpressionStatement():%s", statement.String())
 	return statement
 }
 
 // Parse block statement
 func (p *Parser) parseBlockStatement() *ast.BlockStatement {
-	fmt.Println("      CALL parseBlockStatement()")
+	color.Cyan("      CALL parseBlockStatement()")
 	block := &ast.BlockStatement{Token: p.currentToken}
 	block.Statements = []ast.Statement{}
 
@@ -260,38 +261,38 @@ func (p *Parser) parseBlockStatement() *ast.BlockStatement {
 		p.GetNextToken()
 	}
 
-	fmt.Println("      RET parser.parseBlockStatement():", block.String())
+	color.Blue("      RET parser.parseBlockStatement(): %s", block.String())
 	return block
 }
 
 // Parse expressions e.g. "5 + foo"
 func (p *Parser) parseExpression(precedence int) ast.Expression {
-	fmt.Printf("      CALL parser.parseExpression(%v)\n", precedence)
+	color.Cyan("      CALL parser.parseExpression(%v)\n", precedence)
 	prefixFunc := p.prefixMap[p.currentToken.Type]
 	if prefixFunc == nil {
 		p.reportMissingPrefixFunctionError(p.currentToken.Type)
 		return nil
 	}
 
-	fmt.Println("      EXEC leftExpression:", p.currentToken.Literal, p.currentToken.Type)
+	color.Yellow("      EXEC leftExpression: %s %s", p.currentToken.Literal, p.currentToken.Type)
 	leftExpression := prefixFunc()
 
 	// Tries to find infixFunc for tokens until finds token with lower precedence
 	for (p.nextToken.Type != token.SEMICOLON) && precedence < p.getNextPrecedence() {
 		infixFunc := p.infixMap[p.nextToken.Type]
 		if infixFunc == nil {
-			fmt.Println("      RET parser.parseExpression():", leftExpression.String())
+			color.Blue("      RET parser.parseExpression(): %s", leftExpression.String())
 			return leftExpression
 		}
 
 		p.GetNextToken()
 
-		fmt.Println("      EXEC is infix function")
+		color.Yellow("      EXEC is infix function")
 		leftExpression = infixFunc(leftExpression)
 	}
 
 	if leftExpression != nil {
-		fmt.Println("      RET parser.parseExpression():", leftExpression.String())
+		color.Blue("      RET parser.parseExpression(): %s", leftExpression.String())
 	}
 	return leftExpression
 }
@@ -315,7 +316,7 @@ func (p *Parser) parseIntegerLiteral() ast.Expression {
 
 // Parse prefix expressions e.g. "-add(1, 2)"
 func (p *Parser) parsePrefix() ast.Expression {
-	fmt.Println("      CALL p.parsePrefix()")
+	color.Cyan("      CALL p.parsePrefix()")
 	// e.g. "-"
 	expression := &ast.Prefix{Token: p.currentToken, Operator: p.currentToken.Literal}
 
@@ -324,13 +325,13 @@ func (p *Parser) parsePrefix() ast.Expression {
 	// e.g. "add(1, 2)"
 	expression.Value = p.parseExpression(PREFIX)
 
-	fmt.Println("      RET p.parsePrefix():", expression.String())
+	color.Blue("      RET p.parsePrefix(): %s", expression.String())
 	return expression
 }
 
 // Parse infix expressions e.g. "2+foo"
 func (p *Parser) parseInfix(left ast.Expression) ast.Expression {
-	fmt.Println("      CALL p.parseInfix()")
+	color.Cyan("      CALL p.parseInfix()")
 	// e.g. "2" and "+"
 	expression := &ast.Infix{Token: p.currentToken, Operator: p.currentToken.Literal, Left: left}
 
@@ -340,7 +341,7 @@ func (p *Parser) parseInfix(left ast.Expression) ast.Expression {
 	expression.Right = p.parseExpression(precedence)
 
 	if expression != nil {
-		fmt.Println("      RET p.parseInfix():", expression.String())
+		color.Blue("      RET p.parseInfix(): %s", expression.String())
 	}
 	return expression
 }
@@ -352,7 +353,7 @@ func (p *Parser) parseBoolean() ast.Expression {
 
 // Parse grouped expressions e.g. "(5+5)*2"
 func (p *Parser) parseGrouped() ast.Expression {
-	fmt.Println("      CALL p.parseGrouped()")
+	color.Cyan("      CALL p.parseGrouped()")
 
 	// "("
 	p.GetNextToken()
@@ -363,14 +364,14 @@ func (p *Parser) parseGrouped() ast.Expression {
 	if !p.GetExpectNextToken(token.RPAREN) {
 		return nil
 	} else {
-		fmt.Println("      RET p.parseGrouped():", expression.String())
+		color.Blue("      RET p.parseGrouped():", expression.String())
 		return expression
 	}
 }
 
 // Parse if expressions e.g. "if (4 < 5) { x } else { y }"
 func (p *Parser) parseIf() ast.Expression {
-	fmt.Println("      CALL p.parseIf()")
+	color.Cyan("      CALL p.parseIf()")
 	// "if"
 	expression := &ast.If{Token: p.currentToken}
 
@@ -409,13 +410,13 @@ func (p *Parser) parseIf() ast.Expression {
 		expression.Alternative = p.parseBlockStatement()
 	}
 
-	fmt.Println("      RET p.parseIf():", expression.String())
+	color.Blue("      RET p.parseIf(): %s", expression.String())
 	return expression
 }
 
 // Parse function expressions e.g. "f(x, y) { x + y; }"
 func (p *Parser) parseFunction() ast.Expression {
-	fmt.Println("      CALL p.parseFunction()")
+	color.Cyan("      CALL p.parseFunction()")
 	// "f"
 	f := &ast.Function{Token: p.currentToken}
 
@@ -434,13 +435,13 @@ func (p *Parser) parseFunction() ast.Expression {
 
 	f.Body = p.parseBlockStatement()
 
-	fmt.Println("      RET p.parseFunction():", f.String())
+	color.Blue("      RET p.parseFunction(): %s", f.String())
 	return f
 }
 
 // Helper method to parse function parameters
 func (p *Parser) parseFunctionParameters() []*ast.Identifier {
-	fmt.Println("      CALL p.parseFunctionParameters()")
+	color.Cyan("      CALL p.parseFunctionParameters()")
 	identifiers := []*ast.Identifier{}
 
 	// Empty list of parameters: already ")"
@@ -468,18 +469,18 @@ func (p *Parser) parseFunctionParameters() []*ast.Identifier {
 		return nil
 	}
 
-	fmt.Println("      RET p.parseFunctionParameters()")
+	color.Blue("      RET p.parseFunctionParameters()")
 	return identifiers
 }
 
 // Parse call expressions e.g. "add(1, 2);"
 func (p *Parser) parseCall(function ast.Expression) ast.Expression {
-	fmt.Println("      CALL parseCall()")
+	color.Cyan("      CALL parseCall()")
 
 	c := &ast.Call{Token: p.currentToken, Function: function}
 	c.Arguments = p.parseCallParameters()
 
-	fmt.Println("      RET parseCall(): ", c.String())
+	color.Blue("      RET parseCall(): %s", c.String())
 	return c
 }
 

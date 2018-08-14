@@ -3,7 +3,9 @@ package repl
 import (
 	"bufio"
 	"fmt"
+	"go_interpreter/evaluator"
 	"go_interpreter/lexer"
+	"go_interpreter/object"
 	"go_interpreter/parser"
 	"io"
 )
@@ -12,6 +14,7 @@ const PROMPT = ">> "
 
 func StartLoop(in io.Reader, out io.Writer) {
 	scanner := bufio.NewScanner(in)
+	env := object.BuildEnvironment()
 
 	for {
 		fmt.Printf(PROMPT)
@@ -35,8 +38,12 @@ func StartLoop(in io.Reader, out io.Writer) {
 			continue
 		}
 
-		io.WriteString(out, prog.String())
-		io.WriteString(out, "\n")
+		// Evaluator
+		result := evaluator.Eval(prog, env)
+		if result != nil {
+			io.WriteString(out, result.Inspect())
+			io.WriteString(out, "\n")
+		}
 	}
 }
 
