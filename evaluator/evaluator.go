@@ -7,6 +7,8 @@ import (
 	"go_interpreter/object"
 )
 
+var PRINT_EVAL = false
+
 var (
 	NULL  = &object.Null{}
 	TRUE  = &object.Boolean{Value: true}
@@ -14,7 +16,9 @@ var (
 )
 
 func Eval(node ast.Node, env *object.Environment) object.Object {
-	color.Green("EVAL %T: evaluator.Eval(%s)", node, node.String())
+	if PRINT_EVAL {
+		color.Green("EVAL %T: evaluator.Eval(%s)", node, node.String())
+	}
 	switch node := node.(type) {
 	case *ast.Program:
 		return evalProgram(node, env)
@@ -61,9 +65,69 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 		env.Set(node.Name.Value, value)
 	case *ast.Identifier:
 		return evalIdentifier(node, env)
+	case *ast.Function:
+		return &object.Function{node.Parameters, node.Body, env}
+	case *ast.Call:
+		f := Eval(node.Function, env)
+		if isError(f) {
+			return f
+		}
+
+		args := evalArguments(node.Arguments, env)
+		if len(args) == 1 && isError(args[0]) {
+			return args[0]
+		}
+
+		return evalFunction(f, args)
 	}
 
 	return nil
+}
+
+// Helper method for evaluating arguments for evaluating function
+func evalArguments(args []ast.Expression, env *object.Environment) []object.Object {
+	var result []object.Object
+
+	for _, a := range args {
+		value := Eval(a, env)
+		if isError(value) {
+			return []object.Object{value}
+		}
+
+		result = append(result, value)
+	}
+
+	return result
+}
+
+// Helper method for evaluating function
+func evalFunction(fobj object.Object, args []object.Object) object.Object {
+	f, ok := fobj.(*object.Function)
+	if !ok {
+		return NewError("not a function: %s", f.Type())
+	}
+
+	outerEnv := extendEnv(f, args)
+	value := Eval(f.Body, outerEnv)
+
+	result, ok := value.(*object.Return)
+	if ok {
+		return result.Value
+	} else {
+		return value
+	}
+}
+
+// Helper method for extending environment for evaluating function
+func extendEnv(f *object.Function, args []object.Object) *object.Environment {
+	innerEnv := object.BuildInnerEnvironment(f.Env)
+
+	// Bind arguments to parameter names
+	for i, p := range f.Parameters {
+		innerEnv.Set(p.Value, args[i])
+	}
+
+	return innerEnv
 }
 
 // Helper method for evaluating boolean

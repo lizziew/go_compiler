@@ -182,6 +182,46 @@ func TestLetStatement(t *testing.T) {
 	}
 }
 
+func TestFunctionDefinition(t *testing.T) {
+	input := "fn(x) {x + 2;};"
+
+	result := testEval(input)
+
+	f, ok := result.(*object.Function)
+	if !ok {
+		t.Fatalf("Object is not function")
+	}
+
+	assert.Equal(t, 1, len(f.Parameters), "Expected number of parameters")
+	assert.Equal(t, "x", f.Parameters[0].String(), "Expected parameter")
+	assert.Equal(t, "(x + 2)", f.Body.String(), "Expected body")
+}
+
+func TestFunctionCall(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected int64
+	}{
+		{
+			"let res = fn(x) { x; }; res(5);",
+			5,
+		},
+		{
+			"let add = fn(x, y) { x + y;}; add(5+2, add(2, 3));",
+			12,
+		},
+	}
+
+	for _, test := range tests {
+		testInteger(t, testEval(test.input), test.expected)
+	}
+}
+
+func TestClosure(t *testing.T) {
+	input := "let a = fn(x) { fn(y) {x+y}}; let b = a(2); b(3);"
+	testInteger(t, testEval(input), 5)
+}
+
 // Helper method for calling eval
 func testEval(input string) object.Object {
 	l := lexer.BuildLexer(input)
