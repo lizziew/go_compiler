@@ -104,19 +104,21 @@ func evalArguments(args []ast.Expression, env *object.Environment) []object.Obje
 
 // Helper method for evaluating function
 func evalFunction(fobj object.Object, args []object.Object) object.Object {
-	f, ok := fobj.(*object.Function)
-	if !ok {
+	switch f := fobj.(type) {
+	case *object.Function:
+		outerEnv := extendEnv(f, args)
+		value := Eval(f.Body, outerEnv)
+
+		result, ok := value.(*object.Return)
+		if ok {
+			return result.Value
+		} else {
+			return value
+		}
+	case *object.BuiltIn:
+		return f.Function(args...)
+	default:
 		return NewError("not a function: %s", f.Type())
-	}
-
-	outerEnv := extendEnv(f, args)
-	value := Eval(f.Body, outerEnv)
-
-	result, ok := value.(*object.Return)
-	if ok {
-		return result.Value
-	} else {
-		return value
 	}
 }
 
@@ -300,11 +302,16 @@ func isTrue(obj object.Object) bool {
 // Helper method for evaluating identifiers
 func evalIdentifier(node *ast.Identifier, env *object.Environment) object.Object {
 	value, ok := env.Get(node.Value)
-	if !ok {
-		return NewError("identifier not found: " + node.Value)
+	if ok {
+		return value
 	}
 
-	return value
+	builtin, ok := builtins[node.Value]
+	if ok {
+		return builtin
+	}
+
+	return NewError("identifier not found: " + node.Value)
 }
 
 // Helper method for reporting errors

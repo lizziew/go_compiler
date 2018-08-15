@@ -17,6 +17,7 @@ const (
 	ERROR_OBJECT    = "ERROR"
 	FUNCTION_OBJECT = "FUNCTION"
 	STRING_OBJECT   = "STRING"
+	BUILTIN_OBJECT  = "BUILTIN"
 )
 
 // Generic object
@@ -128,4 +129,19 @@ func (s *String) Type() ObjectType {
 
 func (s *String) Inspect() string {
 	return s.Value
+}
+
+// Built in function type
+type BuiltInFunction func(args ...Object) Object
+
+type BuiltIn struct {
+	Function BuiltInFunction
+}
+
+func (b *BuiltIn) Type() ObjectType {
+	return BUILTIN_OBJECT
+}
+
+func (b *BuiltIn) Inspect() string {
+	return "built in function"
 }

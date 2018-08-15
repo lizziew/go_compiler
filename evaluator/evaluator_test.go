@@ -244,6 +244,35 @@ func TestStringConcatenation(t *testing.T) {
 	assert.Equal(t, str.Value, "foo bar", "Expected value of concatenated string")
 }
 
+func TestBuiltin(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected interface{}
+	}{
+		{`len("")`, 0},
+		{`len("hello world")`, 11},
+		{`len(1)`, "argument to `len` not supported, got INTEGER"},
+		{`len("one", "two")`, "wrong number of arguments (expected = 1)"},
+	}
+
+	for _, test := range tests {
+		actual := testEval(test.input)
+
+		switch expected := test.expected.(type) {
+		case int:
+			testInteger(t, actual, int64(expected))
+		case string:
+			errObj, ok := actual.(*object.Error)
+
+			if !ok {
+				t.Fatalf("Object is not error")
+			}
+
+			assert.Equal(t, errObj.Message, expected)
+		}
+	}
+}
+
 // Helper method for calling eval
 func testEval(input string) object.Object {
 	l := lexer.BuildLexer(input)
