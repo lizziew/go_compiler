@@ -383,6 +383,24 @@ func TestCallExpression(t *testing.T) {
 	testInfix(t, expression.Arguments[2], 4, "+", 5)
 }
 
+func TestString(t *testing.T) {
+	input := `"hello world"`
+
+	l := lexer.BuildLexer(input)
+	p := BuildParser(l)
+	prog := p.ParseProgram()
+
+	checkParserErrors(t, p)
+
+	statement := prog.Statements[0].(*ast.ExpressionStatement)
+	literal, ok := statement.Expression.(*ast.String)
+	if !ok {
+		t.Fatalf("Expression is not String")
+	}
+
+	assert.Equal(t, "hello world", literal.Value, "Expceted value of string")
+}
+
 // Helper method for checking parser errors
 func checkParserErrors(t *testing.T, p *Parser) {
 	errors := p.Errors()

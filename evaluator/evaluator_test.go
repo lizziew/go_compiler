@@ -222,6 +222,28 @@ func TestClosure(t *testing.T) {
 	testInteger(t, testEval(input), 5)
 }
 
+func TestString(t *testing.T) {
+	input := `"Hello world!"`
+	result := testEval(input)
+	str, ok := result.(*object.String)
+	if !ok {
+		t.Fatalf("Object isn't string")
+	}
+
+	assert.Equal(t, str.Value, "Hello world!", "Expected value of string")
+}
+
+func TestStringConcatenation(t *testing.T) {
+	input := `"foo" + " " + "bar"`
+	result := testEval(input)
+	str, ok := result.(*object.String)
+	if !ok {
+		t.Fatalf("Object isn't string")
+	}
+
+	assert.Equal(t, str.Value, "foo bar", "Expected value of concatenated string")
+}
+
 // Helper method for calling eval
 func testEval(input string) object.Object {
 	l := lexer.BuildLexer(input)

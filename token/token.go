@@ -9,8 +9,9 @@ const (
 	EOF     = "EOF"
 
 	// Function/variable names & values
-	IDENT = "IDENT"
-	INT   = "INT"
+	IDENT  = "IDENT"
+	INT    = "INT"
+	STRING = "STRING"
 
 	// Operators
 	ASSIGN   = "="

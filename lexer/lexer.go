@@ -106,6 +106,8 @@ func (l *Lexer) NextToken() token.Token {
 		t = token.Token{token.LT, string(l.currentChar)}
 	case '>':
 		t = token.Token{token.GT, string(l.currentChar)}
+	case '"':
+		t = token.Token{token.STRING, l.readString()}
 	case 0:
 		t = token.Token{token.EOF, ""}
 	default:
@@ -124,6 +126,20 @@ func (l *Lexer) NextToken() token.Token {
 
 	l.advanceCharacter()
 	return t
+}
+
+// Helper function
+func (l *Lexer) readString() string {
+	startPosition := l.currentPosition + 1
+
+	for {
+		l.advanceCharacter()
+		if l.currentChar == '"' || l.currentChar == 0 {
+			break
+		}
+	}
+
+	return l.input[startPosition:l.currentPosition]
 }
 
 // Helper function

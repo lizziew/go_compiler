@@ -16,6 +16,7 @@ const (
 	RETURN_OBJECT   = "RETURN"
 	ERROR_OBJECT    = "ERROR"
 	FUNCTION_OBJECT = "FUNCTION"
+	STRING_OBJECT   = "STRING"
 )
 
 // Generic object
@@ -114,4 +115,17 @@ func (f *Function) Inspect() string {
 	out.WriteString("\n}")
 
 	return out.String()
+}
+
+// String type
+type String struct {
+	Value string
+}
+
+func (s *String) Type() ObjectType {
+	return STRING_OBJECT
+}
+
+func (s *String) Inspect() string {
+	return s.Value
 }

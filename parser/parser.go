@@ -42,6 +42,7 @@ func BuildParser(l *lexer.Lexer) *Parser {
 	p.registerPrefix(token.LPAREN, p.parseGrouped)
 	p.registerPrefix(token.IF, p.parseIf)
 	p.registerPrefix(token.FUNCTION, p.parseFunction)
+	p.registerPrefix(token.STRING, p.parseString)
 
 	// Infix: Map tokens --> parsing functions
 	p.infixMap = make(map[token.TokenType]parseInfix)
@@ -464,12 +465,12 @@ func (p *Parser) parseIf() ast.Expression {
 	return expression
 }
 
-// Parse function expressions e.g. "f(x, y) { x + y; }"
+// Parse function expressions e.g. "fn(x, y) { x + y; }"
 func (p *Parser) parseFunction() ast.Expression {
 	if PRINT_PARSE {
 		color.Cyan("      CALL p.parseFunction()")
 	}
-	// "f"
+	// "fn"
 	f := &ast.Function{Token: p.currentToken}
 
 	// "("
@@ -572,4 +573,9 @@ func (p *Parser) parseCallParameters() []ast.Expression {
 	}
 
 	return args
+}
+
+// Parse string expressions
+func (p *Parser) parseString() ast.Expression {
+	return &ast.String{Token: p.currentToken, Value: p.currentToken.Literal}
 }
