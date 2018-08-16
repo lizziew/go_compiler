@@ -1,6 +1,9 @@
 package evaluator
 
-import "go_interpreter/object"
+import (
+	"fmt"
+	"go_interpreter/object"
+)
 
 var builtins = map[string]*object.BuiltIn{
 	"len": &object.BuiltIn{
@@ -94,6 +97,14 @@ var builtins = map[string]*object.BuiltIn{
 			copy(newElements, array.Elements)
 			newElements[length] = args[1]
 			return &object.Array{Elements: newElements}
+		},
+	},
+	"print": &object.BuiltIn{
+		Function: func(args ...object.Object) object.Object {
+			for _, arg := range args {
+				fmt.Println(arg.Inspect())
+			}
+			return NULL
 		},
 	},
 }
