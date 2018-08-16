@@ -73,7 +73,7 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 			return f
 		}
 
-		args := evalArguments(node.Arguments, env)
+		args := evalExpressions(node.Arguments, env)
 		if len(args) == 1 && isError(args[0]) {
 			return args[0]
 		}
@@ -81,13 +81,32 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 		return evalFunction(f, args)
 	case *ast.String:
 		return &object.String{node.Value}
+	case *ast.Array:
+		elements := evalExpressions(node.Elements, env)
+		if len(elements) == 1 && isError(elements[0]) {
+			return elements[0]
+		}
+
+		return &object.Array{Elements: elements}
+	case *ast.Index:
+		array := Eval(node.Array, env)
+		if isError(array) {
+			return array
+		}
+
+		index := Eval(node.Index, env)
+		if isError(index) {
+			return index
+		}
+
+		return evalIndex(array, index)
 	}
 
 	return nil
 }
 
-// Helper method for evaluating arguments for evaluating function
-func evalArguments(args []ast.Expression, env *object.Environment) []object.Object {
+// Helper method for evaluating expressions
+func evalExpressions(args []ast.Expression, env *object.Environment) []object.Object {
 	var result []object.Object
 
 	for _, a := range args {
@@ -325,4 +344,22 @@ func isError(obj object.Object) bool {
 		return obj.Type() == object.ERROR_OBJECT
 	}
 	return false
+}
+
+// Helper method for evaluating index expressions
+func evalIndex(arrayObj object.Object, indexObj object.Object) object.Object {
+	switch {
+	case arrayObj.Type() == object.ARRAY_OBJECT && indexObj.Type() == object.INTEGER_OBJECT:
+		array := arrayObj.(*object.Array)
+		index := indexObj.(*object.Integer).Value
+
+		end := int64(len(array.Elements) - 1)
+		if index < 0 || index > end {
+			return NULL
+		}
+
+		return array.Elements[index]
+	default:
+		return NewError("index operator not supported: %s", arrayObj.Type())
+	}
 }

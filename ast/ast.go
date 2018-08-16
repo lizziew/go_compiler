@@ -347,3 +347,55 @@ func (s *String) TokenLiteral() string {
 func (s *String) String() string {
 	return s.Token.Literal
 }
+
+// Array Expression Node
+type Array struct {
+	Token    token.Token // token.LSQUARE
+	Elements []Expression
+}
+
+func (a *Array) expressionNode() {}
+
+func (a *Array) TokenLiteral() string {
+	return a.Token.Literal
+}
+
+func (a *Array) String() string {
+	var out bytes.Buffer
+
+	elements := []string{}
+	for _, e := range a.Elements {
+		elements = append(elements, e.String())
+	}
+
+	out.WriteString("[")
+	out.WriteString(strings.Join(elements, ", "))
+	out.WriteString("]")
+
+	return out.String()
+}
+
+// Index Expression Node
+type Index struct {
+	Token token.Token // token.LSQUARE
+	Array Expression  // item being accessed
+	Index Expression
+}
+
+func (i *Index) expressionNode() {}
+
+func (i *Index) TokenLiteral() string {
+	return i.Token.Literal
+}
+
+func (i *Index) String() string {
+	var out bytes.Buffer
+
+	out.WriteString("(")
+	out.WriteString(i.Array.String())
+	out.WriteString("[")
+	out.WriteString(i.Index.String())
+	out.WriteString("])")
+
+	return out.String()
+}

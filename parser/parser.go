@@ -43,6 +43,7 @@ func BuildParser(l *lexer.Lexer) *Parser {
 	p.registerPrefix(token.IF, p.parseIf)
 	p.registerPrefix(token.FUNCTION, p.parseFunction)
 	p.registerPrefix(token.STRING, p.parseString)
+	p.registerPrefix(token.LSQUARE, p.parseArray)
 
 	// Infix: Map tokens --> parsing functions
 	p.infixMap = make(map[token.TokenType]parseInfix)
@@ -55,6 +56,7 @@ func BuildParser(l *lexer.Lexer) *Parser {
 	p.registerInfix(token.LT, p.parseInfix)
 	p.registerInfix(token.GT, p.parseInfix)
 	p.registerInfix(token.LPAREN, p.parseCall)
+	p.registerInfix(token.LSQUARE, p.parseIndex)
 
 	return p
 }
@@ -116,6 +118,7 @@ const (
 	PRODUCT                // 5: *
 	PREFIX                 // 6: -foo, !foo
 	CALL                   // 7: foo(bar)
+	INDEX                  // 8: array[index]
 )
 
 // Maps token types --> precedences
@@ -129,6 +132,7 @@ var precedencesMap = map[token.TokenType]int{
 	token.SLASH:    PRODUCT,
 	token.ASTERISK: PRODUCT,
 	token.LPAREN:   CALL,
+	token.LSQUARE:  INDEX,
 }
 
 func (p *Parser) getCurrentPrecedence() int {
@@ -539,7 +543,7 @@ func (p *Parser) parseCall(function ast.Expression) ast.Expression {
 	}
 
 	c := &ast.Call{Token: p.currentToken, Function: function}
-	c.Arguments = p.parseCallParameters()
+	c.Arguments = p.parseExpressionList(token.RPAREN)
 
 	if PRINT_PARSE {
 		color.Blue("      RET parseCall(): %s", c.String())
@@ -547,35 +551,55 @@ func (p *Parser) parseCall(function ast.Expression) ast.Expression {
 	return c
 }
 
-// Helper method to parse call parameters
-func (p *Parser) parseCallParameters() []ast.Expression {
-	args := []ast.Expression{}
+// Parse string expressions
+func (p *Parser) parseString() ast.Expression {
+	return &ast.String{Token: p.currentToken, Value: p.currentToken.Literal}
+}
 
-	// Empty list of parameters: already ")"
-	if p.nextToken.Type == token.RPAREN {
+// Parse array expressions
+func (p *Parser) parseArray() ast.Expression {
+	return &ast.Array{p.currentToken, p.parseExpressionList(token.RSQUARE)}
+}
+
+// Helper method to parse expression list
+func (p *Parser) parseExpressionList(end token.TokenType) []ast.Expression {
+	list := []ast.Expression{}
+
+	// "]"
+	if p.nextToken.Type == end {
 		p.GetNextToken()
-		return args
+		return list
 	}
 
-	// First parameter
 	p.GetNextToken()
-	args = append(args, p.parseExpression(LOWEST))
+
+	list = append(list, p.parseExpression(LOWEST))
 
 	for p.nextToken.Type == token.COMMA {
 		p.GetNextToken()
 		p.GetNextToken()
 
-		args = append(args, p.parseExpression(LOWEST))
+		list = append(list, p.parseExpression(LOWEST))
 	}
 
-	if !p.GetExpectNextToken(token.RPAREN) {
+	if !p.GetExpectNextToken(end) {
 		return nil
+	} else {
+		return list
 	}
-
-	return args
 }
 
-// Parse string expressions
-func (p *Parser) parseString() ast.Expression {
-	return &ast.String{Token: p.currentToken, Value: p.currentToken.Literal}
+// Parse index expressions
+func (p *Parser) parseIndex(array ast.Expression) ast.Expression {
+	i := &ast.Index{Token: p.currentToken, Array: array}
+
+	p.GetNextToken()
+
+	i.Index = p.parseExpression(LOWEST)
+
+	if !p.GetExpectNextToken(token.RSQUARE) {
+		return nil
+	} else {
+		return i
+	}
 }
