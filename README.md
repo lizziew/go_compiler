@@ -1,5 +1,9 @@
 # go_interpreter
 
+Based on https://interpreterbook.com/ 
+
+### Features 
+
 Supports:
 - integers, booleans, strings, arrays, hashmaps 
 - prefix, infix operators
@@ -9,3 +13,8 @@ Supports:
 - first class functions
 - return statements
 - closures 
+
+### Logging 
+
+Run with or without intermediate print statements: 
+
