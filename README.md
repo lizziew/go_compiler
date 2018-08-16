@@ -18,3 +18,7 @@ Supports:
 
 Run with or without intermediate print statements: 
 
+![alt text](https://github.com/lizziew/go_interpreter/blob/master/img/without_print.png)
+
+![alt text](https://github.com/lizziew/go_interpreter/blob/master/img/withprint.png)
+
