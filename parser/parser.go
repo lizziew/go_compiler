@@ -44,6 +44,7 @@ func BuildParser(l *lexer.Lexer) *Parser {
 	p.registerPrefix(token.FUNCTION, p.parseFunction)
 	p.registerPrefix(token.STRING, p.parseString)
 	p.registerPrefix(token.LSQUARE, p.parseArray)
+	p.registerPrefix(token.LBRACE, p.parseHash)
 
 	// Infix: Map tokens --> parsing functions
 	p.infixMap = make(map[token.TokenType]parseInfix)
@@ -601,5 +602,38 @@ func (p *Parser) parseIndex(array ast.Expression) ast.Expression {
 		return nil
 	} else {
 		return i
+	}
+}
+
+// Parse hash expressions
+func (p *Parser) parseHash() ast.Expression {
+	hash := &ast.Hash{Token: p.currentToken}
+	hash.Pairs = make(map[ast.Expression]ast.Expression)
+
+	for p.nextToken.Type != token.RBRACE {
+		// Get key
+		p.GetNextToken()
+		key := p.parseExpression(LOWEST)
+
+		// ":"
+		if !p.GetExpectNextToken(token.COLON) {
+			return nil
+		}
+
+		// Get value
+		p.GetNextToken()
+		value := p.parseExpression(LOWEST)
+
+		hash.Pairs[key] = value
+
+		if p.nextToken.Type != token.RBRACE && !p.GetExpectNextToken(token.COMMA) {
+			return nil
+		}
+	}
+
+	if !p.GetExpectNextToken(token.RBRACE) {
+		return nil
+	} else {
+		return hash
 	}
 }

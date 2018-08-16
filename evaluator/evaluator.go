@@ -100,6 +100,8 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 		}
 
 		return evalIndex(array, index)
+	case *ast.Hash:
+		return evalHash(node, env)
 	}
 
 	return nil
@@ -347,19 +349,61 @@ func isError(obj object.Object) bool {
 }
 
 // Helper method for evaluating index expressions
-func evalIndex(arrayObj object.Object, indexObj object.Object) object.Object {
+func evalIndex(accessObj object.Object, indexObj object.Object) object.Object {
 	switch {
-	case arrayObj.Type() == object.ARRAY_OBJECT && indexObj.Type() == object.INTEGER_OBJECT:
-		array := arrayObj.(*object.Array)
+	case accessObj.Type() == object.ARRAY_OBJECT && indexObj.Type() == object.INTEGER_OBJECT:
+		array := accessObj.(*object.Array)
 		index := indexObj.(*object.Integer).Value
 
 		end := int64(len(array.Elements) - 1)
 		if index < 0 || index > end {
 			return NULL
+		} else {
+			return array.Elements[index]
+		}
+	case accessObj.Type() == object.HASH_OBJECT:
+		hash := accessObj.(*object.Hash)
+		key, ok := indexObj.(object.Hashable)
+		if !ok {
+			return NewError("unusable as hash key")
 		}
 
-		return array.Elements[index]
+		pair, ok := hash.Pairs[key.HashKey()]
+		if !ok {
+			return NULL
+		} else {
+			return pair.Value
+		}
 	default:
-		return NewError("index operator not supported: %s", arrayObj.Type())
+		return NewError("index operator not supported: %s", accessObj.Type())
 	}
+}
+
+// Helper method for evaluating hash expressions
+func evalHash(node *ast.Hash, env *object.Environment) object.Object {
+	pairs := make(map[object.HashKey]object.HashPair)
+
+	for k, v := range node.Pairs {
+		// Get key
+		key := Eval(k, env)
+		if isError(key) {
+			return key
+		}
+
+		// Get hashed key
+		hashKey, ok := key.(object.Hashable)
+		if !ok {
+			return NewError("ununsable as hash key")
+		}
+
+		// Get value
+		value := Eval(v, env)
+		if isError(value) {
+			return value
+		}
+
+		pairs[hashKey.HashKey()] = object.HashPair{Key: key, Value: value}
+	}
+
+	return &object.Hash{Pairs: pairs}
 }

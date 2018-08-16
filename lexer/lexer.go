@@ -112,6 +112,8 @@ func (l *Lexer) NextToken() token.Token {
 		t = token.Token{token.LSQUARE, string(l.currentChar)}
 	case ']':
 		t = token.Token{token.RSQUARE, string(l.currentChar)}
+	case ':':
+		t = token.Token{token.COLON, string(l.currentChar)}
 	case 0:
 		t = token.Token{token.EOF, ""}
 	default:

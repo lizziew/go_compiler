@@ -399,3 +399,30 @@ func (i *Index) String() string {
 
 	return out.String()
 }
+
+// Hash Expression Node
+type Hash struct {
+	Token token.Token // token.LBRACE
+	Pairs map[Expression]Expression
+}
+
+func (h *Hash) expressionNode() {}
+
+func (h *Hash) TokenLiteral() string {
+	return h.Token.Literal
+}
+
+func (h *Hash) String() string {
+	var out bytes.Buffer
+
+	pairs := []string{}
+	for k, v := range h.Pairs {
+		pairs = append(pairs, k.String()+":"+v.String())
+	}
+
+	out.WriteString("{")
+	out.WriteString(strings.Join(pairs, ", "))
+	out.WriteString("}")
+
+	return out.String()
+}

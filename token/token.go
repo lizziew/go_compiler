@@ -34,6 +34,7 @@ const (
 	RBRACE    = "}"
 	LSQUARE   = "["
 	RSQUARE   = "]"
+	COLON     = ":"
 
 	// Keywords
 	FUNCTION = "FUNCTION"
