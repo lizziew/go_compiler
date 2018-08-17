@@ -1,5 +1,6 @@
 # go_interpreter
 
+See http://datasieve.blogspot.com/2018/08/building-toy-language-interpreter-in-go.html for more details
 Based on https://interpreterbook.com/ 
 
 ### Features 
