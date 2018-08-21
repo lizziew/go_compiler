@@ -35,6 +35,12 @@ func TestBoolean(t *testing.T) {
 	tests := []testCase{
 		{"true", true},
 		{"false", false},
+		{"1 < 2", true},
+		{"1 > 2", false},
+		{"1 == 1", true},
+		{"2 != 3", true},
+		{"true == true", true},
+		{"true != false", true},
 	}
 
 	testVM(t, tests)

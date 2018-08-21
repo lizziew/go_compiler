@@ -66,10 +66,62 @@ func (vm *VM) Run() error {
 			if err != nil {
 				return err
 			}
+		case bytecode.OpEqual, bytecode.OpNotEqual, bytecode.OpGreater:
+			// Execute
+			err := vm.executeComparison(op)
+			if err != nil {
+				return err
+			}
 		}
 	}
 
 	return nil
+}
+
+// Helper method to execute !=, >, ==
+func (vm *VM) executeComparison(op bytecode.Opcode) error {
+	right := vm.pop()
+	left := vm.pop()
+
+	if left.Type() == object.INTEGER_OBJECT || right.Type() == object.INTEGER_OBJECT {
+		return vm.executeIntegerComparison(left, op, right)
+	}
+
+	switch op {
+	case bytecode.OpEqual:
+		return vm.push(toBooleanObject(right == left))
+	case bytecode.OpNotEqual:
+		return vm.push(toBooleanObject(right != left))
+	default:
+		return fmt.Errorf("Unknown operator: %s %d %s", left.Type(), op, right.Type())
+	}
+}
+
+// Helper method to execute !=, >, == for integers
+func (vm *VM) executeIntegerComparison(
+	left object.Object, op bytecode.Opcode, right object.Object) error {
+	leftValue := left.(*object.Integer).Value
+	rightValue := right.(*object.Integer).Value
+
+	switch op {
+	case bytecode.OpEqual:
+		return vm.push(toBooleanObject(leftValue == rightValue))
+	case bytecode.OpNotEqual:
+		return vm.push(toBooleanObject(leftValue != rightValue))
+	case bytecode.OpGreater:
+		return vm.push(toBooleanObject(leftValue > rightValue))
+	default:
+		return fmt.Errorf("Unknown operator: %d", op)
+	}
+}
+
+// Helper method to convert bool to boolean objects
+func toBooleanObject(input bool) *object.Boolean {
+	if input {
+		return True
+	} else {
+		return False
+	}
 }
 
 // Helper method to execute +,-,*,/

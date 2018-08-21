@@ -81,6 +81,46 @@ func TestBoolean(t *testing.T) {
 				bytecode.Make(bytecode.OpPop),
 			},
 		},
+		{
+			"1 > 2",
+			[]interface{}{1, 2},
+			[]bytecode.Instructions{
+				bytecode.Make(bytecode.OpConstant, 0),
+				bytecode.Make(bytecode.OpConstant, 1),
+				bytecode.Make(bytecode.OpGreater),
+				bytecode.Make(bytecode.OpPop),
+			},
+		},
+		{
+			"1 < 2",
+			[]interface{}{2, 1},
+			[]bytecode.Instructions{
+				bytecode.Make(bytecode.OpConstant, 0),
+				bytecode.Make(bytecode.OpConstant, 1),
+				bytecode.Make(bytecode.OpGreater),
+				bytecode.Make(bytecode.OpPop),
+			},
+		},
+		{
+			"1 == 2",
+			[]interface{}{1, 2},
+			[]bytecode.Instructions{
+				bytecode.Make(bytecode.OpConstant, 0),
+				bytecode.Make(bytecode.OpConstant, 1),
+				bytecode.Make(bytecode.OpEqual),
+				bytecode.Make(bytecode.OpPop),
+			},
+		},
+		{
+			"1 != 2",
+			[]interface{}{1, 2},
+			[]bytecode.Instructions{
+				bytecode.Make(bytecode.OpConstant, 0),
+				bytecode.Make(bytecode.OpConstant, 1),
+				bytecode.Make(bytecode.OpNotEqual),
+				bytecode.Make(bytecode.OpPop),
+			},
+		},
 	}
 
 	testCompiler(t, tests)
