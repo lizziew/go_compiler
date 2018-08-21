@@ -26,6 +26,9 @@ func TestIntegerArithmetic(t *testing.T) {
 		{"(3 + 9)*2", 24},
 		{"2 * (3 + 9)", 24},
 		{"3 + 9 * 2", 21},
+		{"-5", -5},
+		{"-3 + 9", 6},
+		{"(15/-3) + 7", 2},
 	}
 
 	testVM(t, tests)
@@ -41,6 +44,9 @@ func TestBoolean(t *testing.T) {
 		{"2 != 3", true},
 		{"true == true", true},
 		{"true != false", true},
+		{"!5", false},
+		{"!!true", true},
+		{"!!false", false},
 	}
 
 	testVM(t, tests)

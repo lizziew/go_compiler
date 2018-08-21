@@ -40,7 +40,22 @@ func (c *Compiler) Compile(node ast.Node) error {
 			return err
 		}
 		c.emit(bytecode.OpPop)
+	case *ast.Prefix:
+		err := c.Compile(node.Value)
+		if err != nil {
+			return err
+		}
+
+		switch node.Operator {
+		case "!":
+			c.emit(bytecode.OpBang)
+		case "-":
+			c.emit(bytecode.OpMinus)
+		default:
+			return fmt.Errorf("unknown operator: %s", node.Operator)
+		}
 	case *ast.Infix:
+		// Special case for < (turn into >)
 		if node.Operator == "<" {
 			err := c.Compile(node.Right)
 			if err != nil {

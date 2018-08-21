@@ -20,6 +20,8 @@ const (
 	OpEqual                  // 0 operands
 	OpNotEqual               // 0 operands
 	OpGreater                // 0 operands
+	OpMinus                  // 0 operands
+	OpBang                   // 0 operands
 )
 
 type Definition struct {
@@ -39,6 +41,8 @@ var definitions = map[Opcode]*Definition{
 	OpEqual:    {"OpEqual", []int{}},
 	OpNotEqual: {"OpNotEqual", []int{}},
 	OpGreater:  {"OpGreater", []int{}},
+	OpMinus:    {"OpMinus", []int{}},
+	OpBang:     {"OpBang", []int{}},
 }
 
 // Make instruction from op and operands (Big Endian)

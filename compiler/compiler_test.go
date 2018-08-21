@@ -58,6 +58,15 @@ func TestIntegerArithmetic(t *testing.T) {
 				bytecode.Make(bytecode.OpPop),
 			},
 		},
+		{
+			"-5",
+			[]interface{}{5},
+			[]bytecode.Instructions{
+				bytecode.Make(bytecode.OpConstant, 0),
+				bytecode.Make(bytecode.OpMinus),
+				bytecode.Make(bytecode.OpPop),
+			},
+		},
 	}
 
 	testCompiler(t, tests)
@@ -118,6 +127,15 @@ func TestBoolean(t *testing.T) {
 				bytecode.Make(bytecode.OpConstant, 0),
 				bytecode.Make(bytecode.OpConstant, 1),
 				bytecode.Make(bytecode.OpNotEqual),
+				bytecode.Make(bytecode.OpPop),
+			},
+		},
+		{
+			"!true",
+			[]interface{}{},
+			[]bytecode.Instructions{
+				bytecode.Make(bytecode.OpTrue),
+				bytecode.Make(bytecode.OpBang),
 				bytecode.Make(bytecode.OpPop),
 			},
 		},

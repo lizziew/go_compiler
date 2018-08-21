@@ -72,10 +72,47 @@ func (vm *VM) Run() error {
 			if err != nil {
 				return err
 			}
+		case bytecode.OpBang:
+			// Execute
+			err := vm.executeBang()
+			if err != nil {
+				return err
+			}
+		case bytecode.OpMinus:
+			// Execute
+			err := vm.executeMinus()
+			if err != nil {
+				return err
+			}
 		}
 	}
 
 	return nil
+}
+
+// Helper method to execute -
+func (vm *VM) executeMinus() error {
+	value := vm.pop()
+
+	if value.Type() != object.INTEGER_OBJECT {
+		return fmt.Errorf("Unsupported type: %s", value.Type())
+	}
+
+	return vm.push(&object.Integer{Value: -value.(*object.Integer).Value})
+}
+
+// Helper method to execute !
+func (vm *VM) executeBang() error {
+	value := vm.pop()
+
+	switch value {
+	case True:
+		return vm.push(False)
+	case False:
+		return vm.push(True)
+	default:
+		return vm.push(False)
+	}
 }
 
 // Helper method to execute !=, >, ==
