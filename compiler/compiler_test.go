@@ -23,7 +23,9 @@ func TestIntegerArithmetic(t *testing.T) {
 			[]interface{}{1, 2},
 			[]bytecode.Instructions{
 				bytecode.Make(bytecode.OpConstant, 0),
-				bytecode.Make(bytecode.OpConstant, 1)},
+				bytecode.Make(bytecode.OpConstant, 1),
+				bytecode.Make(bytecode.OpAdd),
+			},
 		},
 	}
 

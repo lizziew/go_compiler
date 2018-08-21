@@ -1,6 +1,7 @@
 package compiler
 
 import (
+	"fmt"
 	"go_interpreter/ast"
 	"go_interpreter/bytecode"
 	"go_interpreter/object"
@@ -47,6 +48,13 @@ func (c *Compiler) Compile(node ast.Node) error {
 		err = c.Compile(node.Right)
 		if err != nil {
 			return err
+		}
+
+		switch node.Operator {
+		case "+":
+			c.emit(bytecode.OpAdd)
+		default:
+			return fmt.Errorf("Unknown operator %s", node.Operator)
 		}
 	case *ast.IntegerLiteral:
 		integer := &object.Integer{Value: node.Value}

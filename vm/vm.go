@@ -34,14 +34,21 @@ func (vm *VM) Run() error {
 		// Decode
 		switch op {
 		case bytecode.OpConstant:
+			// Execute
 			constIndex := bytecode.ReadUint16(vm.instructions[i+1:])
 			i += 2
 
-			// Execute
 			err := vm.push(vm.constants[constIndex])
 			if err != nil {
 				return err
 			}
+		case bytecode.OpAdd:
+			//Execute
+			right := vm.pop().(*object.Integer).Value
+			left := vm.pop().(*object.Integer).Value
+			sum := left + right
+
+			vm.push(&object.Integer{Value: sum})
 		}
 	}
 
@@ -57,7 +64,7 @@ func (vm *VM) Top() object.Object {
 	}
 }
 
-// Push onto stack
+// Push to stack
 func (vm *VM) push(o object.Object) error {
 	if vm.stackPointer >= stackCapacity {
 		return fmt.Errorf("Stack overflow")
@@ -66,4 +73,11 @@ func (vm *VM) push(o object.Object) error {
 	vm.stack[vm.stackPointer] = o
 	vm.stackPointer++
 	return nil
+}
+
+// Pop from stack
+func (vm *VM) pop() object.Object {
+	o := vm.stack[vm.stackPointer-1]
+	vm.stackPointer--
+	return o
 }

@@ -62,7 +62,7 @@ func TestIntegerArithmetic(t *testing.T) {
 	tests := []testCase{
 		{"1", 1},
 		{"2", 2},
-		{"1+2", 2},
+		{"1+2", 3},
 	}
 
 	testVM(t, tests)

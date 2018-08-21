@@ -10,6 +10,7 @@ type Opcode byte
 
 const (
 	OpConstant Opcode = iota // 1 operand: previous assigned number to constant
+	OpAdd                    // 0 operands
 )
 
 // Make instruction from op and operands (Big Endian)
@@ -57,6 +58,7 @@ type Definition struct {
 
 var definitions = map[Opcode]*Definition{
 	OpConstant: {"OpConstant", []int{2}},
+	OpAdd:      {"OpAdd", []int{}},
 }
 
 func Lookup(op byte) (*Definition, error) {
