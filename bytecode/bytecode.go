@@ -45,6 +45,10 @@ func Make(op Opcode, operands ...int) []byte {
 	return instruction
 }
 
+func ReadUint16(i Instructions) uint16 {
+	return binary.BigEndian.Uint16(i)
+}
+
 // For debugging
 type Definition struct {
 	Name          string // readability
