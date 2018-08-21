@@ -12,6 +12,9 @@ const (
 	OpConstant Opcode = iota // 1 operand: previous assigned number to constant
 	OpAdd                    // 0 operands
 	OpPop                    // 0 operands
+	OpSub                    // 0 operands
+	OpMul                    // 0 operands
+	OpDiv                    // 0 operands
 )
 
 type Definition struct {
@@ -23,6 +26,9 @@ var definitions = map[Opcode]*Definition{
 	OpConstant: {"OpConstant", []int{2}},
 	OpAdd:      {"OpAdd", []int{}},
 	OpPop:      {"OpPop", []int{}},
+	OpSub:      {"OpSub", []int{}},
+	OpMul:      {"OpMul", []int{}},
+	OpDiv:      {"OpDiv", []int{}},
 }
 
 // Make instruction from op and operands (Big Endian)

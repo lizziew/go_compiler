@@ -28,6 +28,36 @@ func TestIntegerArithmetic(t *testing.T) {
 				bytecode.Make(bytecode.OpPop),
 			},
 		},
+		{
+			"3 * 2",
+			[]interface{}{3, 2},
+			[]bytecode.Instructions{
+				bytecode.Make(bytecode.OpConstant, 0),
+				bytecode.Make(bytecode.OpConstant, 1),
+				bytecode.Make(bytecode.OpMul),
+				bytecode.Make(bytecode.OpPop),
+			},
+		},
+		{
+			"3 / 2",
+			[]interface{}{3, 2},
+			[]bytecode.Instructions{
+				bytecode.Make(bytecode.OpConstant, 0),
+				bytecode.Make(bytecode.OpConstant, 1),
+				bytecode.Make(bytecode.OpDiv),
+				bytecode.Make(bytecode.OpPop),
+			},
+		},
+		{
+			"3 - 2",
+			[]interface{}{3, 2},
+			[]bytecode.Instructions{
+				bytecode.Make(bytecode.OpConstant, 0),
+				bytecode.Make(bytecode.OpConstant, 1),
+				bytecode.Make(bytecode.OpSub),
+				bytecode.Make(bytecode.OpPop),
+			},
+		},
 	}
 
 	testCompiler(t, tests)

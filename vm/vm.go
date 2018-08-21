@@ -42,13 +42,12 @@ func (vm *VM) Run() error {
 			if err != nil {
 				return err
 			}
-		case bytecode.OpAdd:
+		case bytecode.OpAdd, bytecode.OpSub, bytecode.OpMul, bytecode.OpDiv:
 			//Execute
-			right := vm.pop().(*object.Integer).Value
-			left := vm.pop().(*object.Integer).Value
-			sum := left + right
-
-			vm.push(&object.Integer{Value: sum})
+			err := vm.executeBinaryOperation(op)
+			if err != nil {
+				return err
+			}
 		case bytecode.OpPop:
 			//Execute
 			vm.pop()
@@ -56,6 +55,36 @@ func (vm *VM) Run() error {
 	}
 
 	return nil
+}
+
+// Helper method to execute +,-,*,/
+func (vm *VM) executeBinaryOperation(op bytecode.Opcode) error {
+	right := vm.pop()
+	left := vm.pop()
+
+	if left.Type() == object.INTEGER_OBJECT && right.Type() == object.INTEGER_OBJECT {
+		leftValue := left.(*object.Integer).Value
+		rightValue := right.(*object.Integer).Value
+
+		var result int64
+
+		switch op {
+		case bytecode.OpAdd:
+			result = leftValue + rightValue
+		case bytecode.OpSub:
+			result = leftValue - rightValue
+		case bytecode.OpMul:
+			result = leftValue * rightValue
+		case bytecode.OpDiv:
+			result = leftValue / rightValue
+		default:
+			return fmt.Errorf("Unsupported operator for integer: %s", op)
+		}
+
+		return vm.push(&object.Integer{Value: result})
+	} else {
+		return fmt.Errorf("Unsupported types for binary operation: %s %s", left.Type(), right.Type())
+	}
 }
 
 // Get last popped element (for debugging)
