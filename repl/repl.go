@@ -60,8 +60,8 @@ func StartLoop(in io.Reader, out io.Writer) {
 		if err != nil {
 			fmt.Fprintf(out, "Run-time error: %s\n", err)
 		}
-		top := machine.Top()
-		io.WriteString(out, top.Inspect())
+		lastPopped := machine.LastPopped()
+		io.WriteString(out, lastPopped.Inspect())
 		io.WriteString(out, "\n")
 	}
 }

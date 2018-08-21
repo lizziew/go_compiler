@@ -46,8 +46,8 @@ func testVM(t *testing.T, tests []testCase) {
 			t.Fatalf("VM error: %s", err)
 		}
 
-		top := vm.Top()
-		testExpectedObject(t, test.expected, top)
+		lastPopped := vm.LastPopped()
+		testExpectedObject(t, test.expected, lastPopped)
 	}
 }
 

@@ -39,6 +39,7 @@ func (c *Compiler) Compile(node ast.Node) error {
 		if err != nil {
 			return err
 		}
+		c.emit(bytecode.OpPop)
 	case *ast.Infix:
 		err := c.Compile(node.Left)
 		if err != nil {

@@ -49,19 +49,18 @@ func (vm *VM) Run() error {
 			sum := left + right
 
 			vm.push(&object.Integer{Value: sum})
+		case bytecode.OpPop:
+			//Execute
+			vm.pop()
 		}
 	}
 
 	return nil
 }
 
-// Get top element in stack
-func (vm *VM) Top() object.Object {
-	if vm.stackPointer == 0 {
-		return nil
-	} else {
-		return vm.stack[vm.stackPointer-1]
-	}
+// Get last popped element (for debugging)
+func (vm *VM) LastPopped() object.Object {
+	return vm.stack[vm.stackPointer]
 }
 
 // Push to stack

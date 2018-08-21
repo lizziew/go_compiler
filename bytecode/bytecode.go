@@ -11,7 +11,19 @@ type Opcode byte
 const (
 	OpConstant Opcode = iota // 1 operand: previous assigned number to constant
 	OpAdd                    // 0 operands
+	OpPop                    // 0 operands
 )
+
+type Definition struct {
+	Name          string // readability
+	OperandWidths []int  // number of bytes each operand takes up
+}
+
+var definitions = map[Opcode]*Definition{
+	OpConstant: {"OpConstant", []int{2}},
+	OpAdd:      {"OpAdd", []int{}},
+	OpPop:      {"OpPop", []int{}},
+}
 
 // Make instruction from op and operands (Big Endian)
 func Make(op Opcode, operands ...int) []byte {
@@ -51,16 +63,6 @@ func ReadUint16(i Instructions) uint16 {
 }
 
 // For debugging
-type Definition struct {
-	Name          string // readability
-	OperandWidths []int  // number of bytes each operand takes up
-}
-
-var definitions = map[Opcode]*Definition{
-	OpConstant: {"OpConstant", []int{2}},
-	OpAdd:      {"OpAdd", []int{}},
-}
-
 func Lookup(op byte) (*Definition, error) {
 	definition, ok := definitions[Opcode(op)]
 	if !ok {
