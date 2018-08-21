@@ -10,24 +10,34 @@ import (
 	"testing"
 )
 
-func parse(input string) *ast.Program {
-	l := lexer.BuildLexer(input)
-	p := parser.BuildParser(l)
-	return p.ParseProgram()
-}
-
-func testIntegerObject(t *testing.T, expected int64, actual object.Object) {
-	result, ok := actual.(*object.Integer)
-	if !ok {
-		t.Fatalf("Object is not an integer")
-	}
-
-	assert.Equal(t, result.Value, expected)
-}
-
 type testCase struct {
 	input    string
 	expected interface{}
+}
+
+func TestIntegerArithmetic(t *testing.T) {
+	tests := []testCase{
+		{"1", 1},
+		{"2", 2},
+		{"1+2", 3},
+		{"3-5", -2},
+		{"8*9", 72},
+		{"4/3", 1},
+		{"(3 + 9)*2", 24},
+		{"2 * (3 + 9)", 24},
+		{"3 + 9 * 2", 21},
+	}
+
+	testVM(t, tests)
+}
+
+func TestBoolean(t *testing.T) {
+	tests := []testCase{
+		{"true", true},
+		{"false", false},
+	}
+
+	testVM(t, tests)
 }
 
 func testVM(t *testing.T, tests []testCase) {
@@ -51,25 +61,35 @@ func testVM(t *testing.T, tests []testCase) {
 	}
 }
 
+func parse(input string) *ast.Program {
+	l := lexer.BuildLexer(input)
+	p := parser.BuildParser(l)
+	return p.ParseProgram()
+}
+
 func testExpectedObject(t *testing.T, expected interface{}, actual object.Object) {
 	switch expected := expected.(type) {
 	case int:
 		testIntegerObject(t, int64(expected), actual)
+	case bool:
+		testBooleanObject(t, bool(expected), actual)
 	}
 }
 
-func TestIntegerArithmetic(t *testing.T) {
-	tests := []testCase{
-		{"1", 1},
-		{"2", 2},
-		{"1+2", 3},
-		{"3-5", -2},
-		{"8*9", 72},
-		{"4/3", 1},
-		{"(3 + 9)*2", 24},
-		{"2 * (3 + 9)", 24},
-		{"3 + 9 * 2", 21},
+func testIntegerObject(t *testing.T, expected int64, actual object.Object) {
+	result, ok := actual.(*object.Integer)
+	if !ok {
+		t.Fatalf("Object is not an integer")
 	}
 
-	testVM(t, tests)
+	assert.Equal(t, result.Value, expected)
+}
+
+func testBooleanObject(t *testing.T, expected bool, actual object.Object) {
+	result, ok := actual.(*object.Boolean)
+	if !ok {
+		t.Fatalf("Object is not a boolean")
+	}
+
+	assert.Equal(t, result.Value, expected)
 }

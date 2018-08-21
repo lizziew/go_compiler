@@ -66,6 +66,12 @@ func (c *Compiler) Compile(node ast.Node) error {
 	case *ast.IntegerLiteral:
 		integer := &object.Integer{Value: node.Value}
 		c.emit(bytecode.OpConstant, c.addConstant(integer))
+	case *ast.Boolean:
+		if node.Value {
+			c.emit(bytecode.OpTrue)
+		} else {
+			c.emit(bytecode.OpFalse)
+		}
 	}
 
 	return nil

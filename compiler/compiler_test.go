@@ -63,6 +63,29 @@ func TestIntegerArithmetic(t *testing.T) {
 	testCompiler(t, tests)
 }
 
+func TestBoolean(t *testing.T) {
+	tests := []testCase{
+		{
+			"true",
+			[]interface{}{},
+			[]bytecode.Instructions{
+				bytecode.Make(bytecode.OpTrue),
+				bytecode.Make(bytecode.OpPop),
+			},
+		},
+		{
+			"false",
+			[]interface{}{},
+			[]bytecode.Instructions{
+				bytecode.Make(bytecode.OpFalse),
+				bytecode.Make(bytecode.OpPop),
+			},
+		},
+	}
+
+	testCompiler(t, tests)
+}
+
 // Helper method to parse input string
 func parse(input string) *ast.Program {
 	l := lexer.BuildLexer(input)
