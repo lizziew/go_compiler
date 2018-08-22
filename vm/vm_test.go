@@ -47,6 +47,20 @@ func TestBoolean(t *testing.T) {
 		{"!5", false},
 		{"!!true", true},
 		{"!!false", false},
+		{"!(if (false) { 5; })", true},
+	}
+
+	testVM(t, tests)
+}
+
+func TestConditional(t *testing.T) {
+	tests := []testCase{
+		{"if (true) { 10 }", 10},
+		{"if (true) { 10 } else { 20 }", 10},
+		{"if (1 < 2) { 10 } else { 20 }", 10},
+		{"if (1 > 2) { 10 } else { 20 }", 20},
+		{"if (1 > 2) { 10 }", Null},
+		{"if ((if (false) { 10 })) { 10 } else { 20 }", 20},
 	}
 
 	testVM(t, tests)
@@ -85,6 +99,10 @@ func testExpectedObject(t *testing.T, expected interface{}, actual object.Object
 		testIntegerObject(t, int64(expected), actual)
 	case bool:
 		testBooleanObject(t, bool(expected), actual)
+	case *object.Null:
+		if actual != Null {
+			t.Fatalf("Expected null, but actual is not")
+		}
 	}
 }
 

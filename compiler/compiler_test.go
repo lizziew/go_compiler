@@ -7,6 +7,7 @@ import (
 	"go_interpreter/lexer"
 	"go_interpreter/object"
 	"go_interpreter/parser"
+	"strconv"
 	"testing"
 )
 
@@ -144,6 +145,41 @@ func TestBoolean(t *testing.T) {
 	testCompiler(t, tests)
 }
 
+func TestConditional(t *testing.T) {
+	tests := []testCase{
+		{
+			"if (true) { 10 }; 3333;",
+			[]interface{}{10, 3333},
+			[]bytecode.Instructions{
+				bytecode.Make(bytecode.OpTrue),              // 0000
+				bytecode.Make(bytecode.OpJumpNotTruthy, 10), // 0001
+				bytecode.Make(bytecode.OpConstant, 0),       // 0004
+				bytecode.Make(bytecode.OpJump, 11),          // 0007
+				bytecode.Make(bytecode.OpNull),              // 0010
+				bytecode.Make(bytecode.OpPop),               // 0011
+				bytecode.Make(bytecode.OpConstant, 1),       // 0012
+				bytecode.Make(bytecode.OpPop),               // 0015
+			},
+		},
+		{
+			"if (true) { 10 } else { 20 }; 3333; ",
+			[]interface{}{10, 20, 3333},
+			[]bytecode.Instructions{
+				bytecode.Make(bytecode.OpTrue),              // 0000
+				bytecode.Make(bytecode.OpJumpNotTruthy, 10), // 0001
+				bytecode.Make(bytecode.OpConstant, 0),       // 0004
+				bytecode.Make(bytecode.OpJump, 13),          // 0007 (Skip executing the alternative)
+				bytecode.Make(bytecode.OpConstant, 1),       // 0010
+				bytecode.Make(bytecode.OpPop),               // 0013
+				bytecode.Make(bytecode.OpConstant, 2),       // 0014
+				bytecode.Make(bytecode.OpPop),               // 0017
+			},
+		},
+	}
+
+	testCompiler(t, tests)
+}
+
 // Helper method to parse input string
 func parse(input string) *ast.Program {
 	l := lexer.BuildLexer(input)
@@ -175,7 +211,7 @@ func testInstructions(t *testing.T, expectedList []bytecode.Instructions, actual
 	assert.Equal(t, len(actual), len(expected))
 
 	for i, b := range expected {
-		assert.Equal(t, actual[i], b)
+		assert.Equal(t, actual[i], b, strconv.Itoa(i))
 	}
 }
 

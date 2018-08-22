@@ -9,19 +9,22 @@ type Instructions []byte
 type Opcode byte
 
 const (
-	OpConstant Opcode = iota // 1 operand: previous assigned number to constant
-	OpAdd                    // 0 operands
-	OpPop                    // 0 operands
-	OpSub                    // 0 operands
-	OpMul                    // 0 operands
-	OpDiv                    // 0 operands
-	OpTrue                   // 0 operands
-	OpFalse                  // 0 operands
-	OpEqual                  // 0 operands
-	OpNotEqual               // 0 operands
-	OpGreater                // 0 operands
-	OpMinus                  // 0 operands
-	OpBang                   // 0 operands
+	OpConstant      Opcode = iota // 1 operand: previous assigned number to constant
+	OpAdd                         // 0 operands
+	OpPop                         // 0 operands
+	OpSub                         // 0 operands
+	OpMul                         // 0 operands
+	OpDiv                         // 0 operands
+	OpTrue                        // 0 operands
+	OpFalse                       // 0 operands
+	OpEqual                       // 0 operands
+	OpNotEqual                    // 0 operands
+	OpGreater                     // 0 operands
+	OpMinus                       // 0 operands
+	OpBang                        // 0 operands
+	OpJumpNotTruthy               // 1 operand: jump offset if stack top is false, not null
+	OpJump                        // 1 operand: jump offset)
+	OpNull                        // 0 operands
 )
 
 type Definition struct {
@@ -30,19 +33,22 @@ type Definition struct {
 }
 
 var definitions = map[Opcode]*Definition{
-	OpConstant: {"OpConstant", []int{2}},
-	OpAdd:      {"OpAdd", []int{}},
-	OpPop:      {"OpPop", []int{}},
-	OpSub:      {"OpSub", []int{}},
-	OpMul:      {"OpMul", []int{}},
-	OpDiv:      {"OpDiv", []int{}},
-	OpTrue:     {"OpTrue", []int{}},
-	OpFalse:    {"OpFalse", []int{}},
-	OpEqual:    {"OpEqual", []int{}},
-	OpNotEqual: {"OpNotEqual", []int{}},
-	OpGreater:  {"OpGreater", []int{}},
-	OpMinus:    {"OpMinus", []int{}},
-	OpBang:     {"OpBang", []int{}},
+	OpConstant:      {"OpConstant", []int{2}},
+	OpAdd:           {"OpAdd", []int{}},
+	OpPop:           {"OpPop", []int{}},
+	OpSub:           {"OpSub", []int{}},
+	OpMul:           {"OpMul", []int{}},
+	OpDiv:           {"OpDiv", []int{}},
+	OpTrue:          {"OpTrue", []int{}},
+	OpFalse:         {"OpFalse", []int{}},
+	OpEqual:         {"OpEqual", []int{}},
+	OpNotEqual:      {"OpNotEqual", []int{}},
+	OpGreater:       {"OpGreater", []int{}},
+	OpMinus:         {"OpMinus", []int{}},
+	OpBang:          {"OpBang", []int{}},
+	OpJumpNotTruthy: {"OpJumpNotTruthy", []int{2}},
+	OpJump:          {"OpJump", []int{2}},
+	OpNull:          {"OpNull", []int{}},
 }
 
 // Make instruction from op and operands (Big Endian)
