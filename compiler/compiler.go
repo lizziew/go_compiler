@@ -52,6 +52,15 @@ func (c *Compiler) Compile(node ast.Node) error {
 				return err
 			}
 		}
+	case *ast.Array:
+		for _, e := range node.Elements {
+			err := c.Compile(e)
+			if err != nil {
+				return err
+			}
+		}
+
+		c.emit(bytecode.OpArray, len(node.Elements))
 	case *ast.LetStatement:
 		err := c.Compile(node.Value)
 		if err != nil {

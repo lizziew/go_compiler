@@ -244,6 +244,31 @@ func TestString(t *testing.T) {
 	testCompiler(t, tests)
 }
 
+func TestArray(t *testing.T) {
+	tests := []testCase{
+		{
+			"[]",
+			[]interface{}{},
+			[]bytecode.Instructions{
+				bytecode.Make(bytecode.OpArray, 0),
+				bytecode.Make(bytecode.OpPop),
+			},
+		},
+		{
+			"[1,2]",
+			[]interface{}{1, 2},
+			[]bytecode.Instructions{
+				bytecode.Make(bytecode.OpConstant, 0),
+				bytecode.Make(bytecode.OpConstant, 1),
+				bytecode.Make(bytecode.OpArray, 2),
+				bytecode.Make(bytecode.OpPop),
+			},
+		},
+	}
+
+	testCompiler(t, tests)
+}
+
 // Helper method to parse input string
 func parse(input string) *ast.Program {
 	l := lexer.BuildLexer(input)

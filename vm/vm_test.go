@@ -85,6 +85,16 @@ func TestString(t *testing.T) {
 	testVM(t, tests)
 }
 
+func TestArray(t *testing.T) {
+	tests := []testCase{
+		{"[]", []int{}},
+		{"[1,2,3]", []int{1, 2, 3}},
+		{"[1 + 2, 3 * 4, 5 - 6]", []int{3, 12, -1}},
+	}
+
+	testVM(t, tests)
+}
+
 func testVM(t *testing.T, tests []testCase) {
 	for _, test := range tests {
 		prog := parse(test.input)
@@ -120,6 +130,8 @@ func testExpectedObject(t *testing.T, expected interface{}, actual object.Object
 		testBooleanObject(t, bool(expected), actual)
 	case string:
 		testStringObject(t, string(expected), actual)
+	case []int:
+		testArrayObject(t, expected, actual)
 	case *object.Null:
 		if actual != Null {
 			t.Fatalf("Expected null, but actual is not")
@@ -152,4 +164,17 @@ func testStringObject(t *testing.T, expected string, actual object.Object) {
 	}
 
 	assert.Equal(t, result.Value, expected)
+}
+
+func testArrayObject(t *testing.T, expected []int, actual object.Object) {
+	result, ok := actual.(*object.Array)
+	if !ok {
+		t.Fatalf("Object is not an array")
+	}
+
+	assert.Equal(t, len(result.Elements), len(expected))
+
+	for i, e := range expected {
+		testIntegerObject(t, int64(e), result.Elements[i])
+	}
 }

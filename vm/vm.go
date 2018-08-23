@@ -46,6 +46,18 @@ func (vm *VM) Run() error {
 
 		// Decode
 		switch op {
+		case bytecode.OpArray:
+			// Execute
+			numElements := int(bytecode.ReadUint16(vm.instructions[i+1:]))
+			i += 2
+
+			array := vm.buildArray(vm.stackPointer-numElements, vm.stackPointer)
+			vm.stackPointer -= numElements
+
+			err := vm.push(array)
+			if err != nil {
+				return err
+			}
 		case bytecode.OpGetGlobal:
 			// Execute
 			globalIndex := bytecode.ReadUint16(vm.instructions[i+1:])
@@ -134,6 +146,16 @@ func (vm *VM) Run() error {
 	}
 
 	return nil
+}
+
+// Helper method for arrays
+func (vm *VM) buildArray(startIndex, endIndex int) object.Object {
+	array := make([]object.Object, endIndex-startIndex)
+	for i := startIndex; i < endIndex; i++ {
+		array[i-startIndex] = vm.stack[i]
+	}
+
+	return &object.Array{Elements: array}
 }
 
 // Helper method for conditionals
