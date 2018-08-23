@@ -246,6 +246,15 @@ func (vm *VM) executeBinaryOperation(op bytecode.Opcode) error {
 		}
 
 		return vm.push(&object.Integer{Value: result})
+	} else if left.Type() == object.STRING_OBJECT && right.Type() == object.STRING_OBJECT {
+		if op != bytecode.OpAdd {
+			return fmt.Errorf("Unsupported operator for string: %s", op)
+		}
+
+		leftValue := left.(*object.String).Value
+		rightValue := right.(*object.String).Value
+
+		return vm.push(&object.String{Value: leftValue + rightValue})
 	} else {
 		return fmt.Errorf("Unsupported types for binary operation: %s %s", left.Type(), right.Type())
 	}

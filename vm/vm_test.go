@@ -76,6 +76,15 @@ func TestGlobalLet(t *testing.T) {
 	testVM(t, tests)
 }
 
+func TestString(t *testing.T) {
+	tests := []testCase{
+		{`"foo"`, "foo"},
+		{`"foo" + "bar"`, "foobar"},
+	}
+
+	testVM(t, tests)
+}
+
 func testVM(t *testing.T, tests []testCase) {
 	for _, test := range tests {
 		prog := parse(test.input)
@@ -109,6 +118,8 @@ func testExpectedObject(t *testing.T, expected interface{}, actual object.Object
 		testIntegerObject(t, int64(expected), actual)
 	case bool:
 		testBooleanObject(t, bool(expected), actual)
+	case string:
+		testStringObject(t, string(expected), actual)
 	case *object.Null:
 		if actual != Null {
 			t.Fatalf("Expected null, but actual is not")
@@ -129,6 +140,15 @@ func testBooleanObject(t *testing.T, expected bool, actual object.Object) {
 	result, ok := actual.(*object.Boolean)
 	if !ok {
 		t.Fatalf("Object is not a boolean")
+	}
+
+	assert.Equal(t, result.Value, expected)
+}
+
+func testStringObject(t *testing.T, expected string, actual object.Object) {
+	result, ok := actual.(*object.String)
+	if !ok {
+		t.Fatalf("Object is not a string")
 	}
 
 	assert.Equal(t, result.Value, expected)

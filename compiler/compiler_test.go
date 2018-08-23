@@ -219,6 +219,31 @@ func TestGlobalLet(t *testing.T) {
 	testCompiler(t, tests)
 }
 
+func TestString(t *testing.T) {
+	tests := []testCase{
+		{
+			`"foo"`,
+			[]interface{}{"foo"},
+			[]bytecode.Instructions{
+				bytecode.Make(bytecode.OpConstant, 0),
+				bytecode.Make(bytecode.OpPop),
+			},
+		},
+		{
+			`"foo" + "bar"`,
+			[]interface{}{"foo", "bar"},
+			[]bytecode.Instructions{
+				bytecode.Make(bytecode.OpConstant, 0),
+				bytecode.Make(bytecode.OpConstant, 1),
+				bytecode.Make(bytecode.OpAdd),
+				bytecode.Make(bytecode.OpPop),
+			},
+		},
+	}
+
+	testCompiler(t, tests)
+}
+
 // Helper method to parse input string
 func parse(input string) *ast.Program {
 	l := lexer.BuildLexer(input)
@@ -273,6 +298,8 @@ func testConstants(t *testing.T, expected []interface{}, actual []object.Object)
 		switch constant := constant.(type) {
 		case int:
 			testIntegerObject(t, int64(constant), actual[i])
+		case string:
+			testStringObject(t, constant, actual[i])
 		}
 	}
 }
@@ -282,6 +309,16 @@ func testIntegerObject(t *testing.T, expected int64, actual object.Object) {
 	result, ok := actual.(*object.Integer)
 	if !ok {
 		t.Fatalf("Object is not integer")
+	}
+
+	assert.Equal(t, result.Value, expected)
+}
+
+// Helper method to test string objects
+func testStringObject(t *testing.T, expected string, actual object.Object) {
+	result, ok := actual.(*object.String)
+	if !ok {
+		t.Fatalf("Object is not string")
 	}
 
 	assert.Equal(t, result.Value, expected)

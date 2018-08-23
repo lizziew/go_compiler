@@ -200,6 +200,9 @@ func (c *Compiler) Compile(node ast.Node) error {
 		} else {
 			c.emit(bytecode.OpFalse)
 		}
+	case *ast.String:
+		str := &object.String{Value: node.Value}
+		c.emit(bytecode.OpConstant, c.addConstant(str))
 	}
 
 	return nil
