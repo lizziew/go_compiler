@@ -6,7 +6,7 @@ import (
 	"go_interpreter/compiler"
 	// "go_interpreter/evaluator"
 	"go_interpreter/lexer"
-	// "go_interpreter/object"
+	"go_interpreter/object"
 	"go_interpreter/parser"
 	"go_interpreter/vm"
 	"io"
@@ -16,7 +16,12 @@ const PROMPT = ">> "
 
 func StartLoop(in io.Reader, out io.Writer) {
 	scanner := bufio.NewScanner(in)
+
 	// env := object.BuildEnvironment()
+
+	constants := []object.Object{}
+	globals := make([]object.Object, vm.GlobalCapacity)
+	symbolTable := compiler.BuildSymbolTable()
 
 	for {
 		fmt.Printf(PROMPT)
@@ -48,14 +53,16 @@ func StartLoop(in io.Reader, out io.Writer) {
 		}*/
 
 		// Compiler
-		c := compiler.BuildCompiler()
+		c := compiler.BuildStatefulCompiler(symbolTable, constants)
 		err := c.Compile(prog)
 		if err != nil {
 			fmt.Fprintf(out, "Compile-time error: %s\n", err)
 		}
 
 		// VM
-		machine := vm.BuildVM(c.Bytecode())
+		bytecode := c.Bytecode()
+		constants = bytecode.Constants
+		machine := vm.BuildStatefulVM(bytecode, globals)
 		err = machine.Run()
 		if err != nil {
 			fmt.Fprintf(out, "Run-time error: %s\n", err)

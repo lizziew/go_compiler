@@ -66,6 +66,16 @@ func TestConditional(t *testing.T) {
 	testVM(t, tests)
 }
 
+func TestGlobalLet(t *testing.T) {
+	tests := []testCase{
+		{"let one = 1; one", 1},
+		{"let one = 1; let two = 2; one + two", 3},
+		{"let one = 1; let two = one + one; one + two", 3},
+	}
+
+	testVM(t, tests)
+}
+
 func testVM(t *testing.T, tests []testCase) {
 	for _, test := range tests {
 		prog := parse(test.input)

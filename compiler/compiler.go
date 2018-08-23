@@ -23,6 +23,7 @@ type Compiler struct {
 	constants               []object.Object       // Constant pool
 	lastInstruction         EmittedInstruction    // Last emitted instruction
 	secondToLastInstruction EmittedInstruction    // Second to last emitted instruction
+	symbolTable             *SymbolTable          // Store info about each identifier
 }
 
 func BuildCompiler() *Compiler {
@@ -31,7 +32,15 @@ func BuildCompiler() *Compiler {
 		constants:               []object.Object{},
 		lastInstruction:         EmittedInstruction{},
 		secondToLastInstruction: EmittedInstruction{},
+		symbolTable:             BuildSymbolTable(),
 	}
+}
+
+func BuildStatefulCompiler(s *SymbolTable, constants []object.Object) *Compiler {
+	compiler := BuildCompiler()
+	compiler.symbolTable = s
+	compiler.constants = constants
+	return compiler
 }
 
 func (c *Compiler) Compile(node ast.Node) error {
@@ -43,6 +52,23 @@ func (c *Compiler) Compile(node ast.Node) error {
 				return err
 			}
 		}
+	case *ast.LetStatement:
+		err := c.Compile(node.Value)
+		if err != nil {
+			return err
+		}
+
+		symbol := c.symbolTable.Define(node.Name.Value)
+		c.emit(bytecode.OpSetGlobal, symbol.Index)
+	case *ast.Identifier:
+		symbol, ok := c.symbolTable.Resolve(node.Value)
+
+		// Throw a compile-time error if identifier doesn't exist
+		if !ok {
+			return fmt.Errorf("undefined variable %s", node.Value)
+		}
+
+		c.emit(bytecode.OpGetGlobal, symbol.Index)
 	case *ast.ExpressionStatement:
 		err := c.Compile(node.Expression)
 		if err != nil {

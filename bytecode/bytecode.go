@@ -25,6 +25,8 @@ const (
 	OpJumpNotTruthy               // 1 operand: jump offset if stack top is false, not null
 	OpJump                        // 1 operand: jump offset)
 	OpNull                        // 0 operands
+	OpGetGlobal                   // 1 operand: unique number of global binding
+	OpSetGlobal                   // 1 operand: unique number of global binding
 )
 
 type Definition struct {
@@ -49,6 +51,8 @@ var definitions = map[Opcode]*Definition{
 	OpJumpNotTruthy: {"OpJumpNotTruthy", []int{2}},
 	OpJump:          {"OpJump", []int{2}},
 	OpNull:          {"OpNull", []int{}},
+	OpGetGlobal:     {"OpGetGlobal", []int{2}},
+	OpSetGlobal:     {"OpSetGlobal", []int{2}},
 }
 
 // Make instruction from op and operands (Big Endian)
