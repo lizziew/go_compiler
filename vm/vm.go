@@ -46,6 +46,21 @@ func (vm *VM) Run() error {
 
 		// Decode
 		switch op {
+		case bytecode.OpHash:
+			// Execute
+			numElements := int(bytecode.ReadUint16(vm.instructions[i+1:]))
+			i += 2
+
+			hash, err := vm.buildHash(vm.stackPointer-numElements, vm.stackPointer)
+			if err != nil {
+				return err
+			}
+			vm.stackPointer -= numElements
+
+			err = vm.push(hash)
+			if err != nil {
+				return err
+			}
 		case bytecode.OpArray:
 			// Execute
 			numElements := int(bytecode.ReadUint16(vm.instructions[i+1:]))
@@ -146,6 +161,28 @@ func (vm *VM) Run() error {
 	}
 
 	return nil
+}
+
+// Helper method for hashmaps
+func (vm *VM) buildHash(startIndex, endIndex int) (object.Object, error) {
+	hashedPairs := make(map[object.HashKey]object.HashPair)
+	for i := startIndex; i < endIndex; i += 2 {
+		// Get key and value, and create a pair
+		key := vm.stack[i]
+		value := vm.stack[i+1]
+		pair := object.HashPair{Key: key, Value: value}
+
+		// Check if key is hashable
+		hashKey, ok := key.(object.Hashable)
+		if !ok {
+			return nil, fmt.Errorf("Key is unhashable")
+		}
+
+		// Hash the key
+		hashedPairs[hashKey.HashKey()] = pair
+	}
+
+	return &object.Hash{Pairs: hashedPairs}, nil
 }
 
 // Helper method for arrays

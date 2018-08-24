@@ -5,6 +5,7 @@ import (
 	"go_interpreter/ast"
 	"go_interpreter/bytecode"
 	"go_interpreter/object"
+	"sort"
 )
 
 type Bytecode struct {
@@ -52,6 +53,30 @@ func (c *Compiler) Compile(node ast.Node) error {
 				return err
 			}
 		}
+	case *ast.Hash:
+		keys := []ast.Expression{}
+		for key := range node.Pairs {
+			keys = append(keys, key)
+		}
+
+		// Sort for easier testing
+		sort.Slice(keys, func(i, j int) bool {
+			return keys[i].String() < keys[j].String()
+		})
+
+		for _, key := range keys {
+			err := c.Compile(key)
+			if err != nil {
+				return err
+			}
+
+			err = c.Compile(node.Pairs[key])
+			if err != nil {
+				return err
+			}
+		}
+
+		c.emit(bytecode.OpHash, len(node.Pairs)*2)
 	case *ast.Array:
 		for _, e := range node.Elements {
 			err := c.Compile(e)
