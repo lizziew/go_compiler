@@ -328,6 +328,96 @@ func TestIndex(t *testing.T) {
 	testCompiler(t, tests)
 }
 
+func TestFunction(t *testing.T) {
+	tests := []testCase{
+		{
+			"fn() { return 5 + 10 }",
+			[]interface{}{
+				5,
+				10,
+				[]bytecode.Instructions{
+					bytecode.Make(bytecode.OpConstant, 0),
+					bytecode.Make(bytecode.OpConstant, 1),
+					bytecode.Make(bytecode.OpAdd),
+					bytecode.Make(bytecode.OpReturnValue),
+				},
+			},
+			[]bytecode.Instructions{
+				bytecode.Make(bytecode.OpConstant, 2),
+				bytecode.Make(bytecode.OpPop),
+			},
+		},
+		{
+			"fn() { 5 + 10 }",
+			[]interface{}{
+				5,
+				10,
+				[]bytecode.Instructions{
+					bytecode.Make(bytecode.OpConstant, 0),
+					bytecode.Make(bytecode.OpConstant, 1),
+					bytecode.Make(bytecode.OpAdd),
+					bytecode.Make(bytecode.OpReturnValue),
+				},
+			},
+			[]bytecode.Instructions{
+				bytecode.Make(bytecode.OpConstant, 2),
+				bytecode.Make(bytecode.OpPop),
+			},
+		},
+		{
+			"fn() {1; 2}",
+			[]interface{}{
+				1,
+				2,
+				[]bytecode.Instructions{
+					bytecode.Make(bytecode.OpConstant, 0),
+					bytecode.Make(bytecode.OpPop),
+					bytecode.Make(bytecode.OpConstant, 1),
+					bytecode.Make(bytecode.OpReturnValue),
+				},
+			},
+			[]bytecode.Instructions{
+				bytecode.Make(bytecode.OpConstant, 2),
+				bytecode.Make(bytecode.OpPop),
+			},
+		},
+		{
+			"fn() {}",
+			[]interface{}{
+				[]bytecode.Instructions{
+					bytecode.Make(bytecode.OpReturnNothing),
+				},
+			},
+			[]bytecode.Instructions{
+				bytecode.Make(bytecode.OpConstant, 0),
+				bytecode.Make(bytecode.OpPop),
+			},
+		},
+	}
+
+	testCompiler(t, tests)
+}
+
+func TestCompilerScope(t *testing.T) {
+	c := BuildCompiler()
+	assert.Equal(t, 0, c.scopeIndex)
+
+	c.emit(bytecode.OpMul)
+
+	c.enterScope()
+	assert.Equal(t, 1, c.scopeIndex)
+	c.emit(bytecode.OpSub)
+	assert.Equal(t, 1, len(c.scopes[c.scopeIndex].instructions))
+	assert.Equal(t, bytecode.OpSub, c.scopes[c.scopeIndex].lastInstruction.Opcode)
+	c.leaveScope()
+
+	assert.Equal(t, 0, c.scopeIndex)
+	c.emit(bytecode.OpAdd)
+	assert.Equal(t, 2, len(c.scopes[c.scopeIndex].instructions))
+	assert.Equal(t, bytecode.OpAdd, c.scopes[c.scopeIndex].lastInstruction.Opcode)
+	assert.Equal(t, bytecode.OpMul, c.scopes[c.scopeIndex].secondToLastInstruction.Opcode)
+}
+
 // Helper method to parse input string
 func parse(input string) *ast.Program {
 	l := lexer.BuildLexer(input)
@@ -384,6 +474,8 @@ func testConstants(t *testing.T, expected []interface{}, actual []object.Object)
 			testIntegerObject(t, int64(constant), actual[i])
 		case string:
 			testStringObject(t, constant, actual[i])
+		case []bytecode.Instructions:
+			testFunctionObject(t, constant, actual[i])
 		}
 	}
 }
@@ -406,4 +498,14 @@ func testStringObject(t *testing.T, expected string, actual object.Object) {
 	}
 
 	assert.Equal(t, result.Value, expected)
+}
+
+// Helper method to test function objects
+func testFunctionObject(t *testing.T, expected []bytecode.Instructions, actual object.Object) {
+	result, ok := actual.(*object.CompiledFunction)
+	if !ok {
+		t.Fatalf("Object is not compiled function")
+	}
+
+	testInstructions(t, expected, result.Instructions)
 }

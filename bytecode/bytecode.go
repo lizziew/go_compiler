@@ -30,6 +30,10 @@ const (
 	OpArray                       // 1 operand: number of elements
 	OpHash                        // 1 operand: number of key + value elements
 	OpIndex                       // 0 operands
+	OpCall                        // 0 operands
+	OpReturnValue                 // 0 operands: return value at top of stack
+	OpReturnNothing               // 0 operands: return from current function (no value)
+
 )
 
 type Definition struct {
@@ -59,6 +63,9 @@ var definitions = map[Opcode]*Definition{
 	OpArray:         {"OpArray", []int{2}},
 	OpHash:          {"OpHash", []int{2}},
 	OpIndex:         {"OpIndex", []int{}},
+	OpCall:          {"OpCall", []int{}},
+	OpReturnValue:   {"OpReturnValue", []int{}},
+	OpReturnNothing: {"OpReturnNothing", []int{}},
 }
 
 // Make instruction from op and operands (Big Endian)

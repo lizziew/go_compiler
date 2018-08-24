@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"go_interpreter/ast"
+	"go_interpreter/bytecode"
 	"hash/fnv"
 	"strings"
 )
@@ -11,16 +12,17 @@ import (
 type ObjectType string
 
 const (
-	INTEGER_OBJECT  = "INTEGER"
-	BOOLEAN_OBJECT  = "BOOLEAN"
-	NULL_OBJECT     = "NULL"
-	RETURN_OBJECT   = "RETURN"
-	ERROR_OBJECT    = "ERROR"
-	FUNCTION_OBJECT = "FUNCTION"
-	STRING_OBJECT   = "STRING"
-	BUILTIN_OBJECT  = "BUILTIN"
-	ARRAY_OBJECT    = "ARRAY"
-	HASH_OBJECT     = "HASH"
+	INTEGER_OBJECT           = "INTEGER"
+	BOOLEAN_OBJECT           = "BOOLEAN"
+	NULL_OBJECT              = "NULL"
+	RETURN_OBJECT            = "RETURN"
+	ERROR_OBJECT             = "ERROR"
+	FUNCTION_OBJECT          = "FUNCTION"
+	COMPILED_FUNCTION_OBJECT = "COMPILED_FUNCTION"
+	STRING_OBJECT            = "STRING"
+	BUILTIN_OBJECT           = "BUILTIN"
+	ARRAY_OBJECT             = "ARRAY"
+	HASH_OBJECT              = "HASH"
 )
 
 // Generic object
@@ -92,7 +94,7 @@ func (e *Error) Inspect() string {
 	return "ERROR: " + e.Message
 }
 
-// Function type
+// Function type (represents evaluated function literals)
 type Function struct {
 	Parameters []*ast.Identifier
 	Body       *ast.BlockStatement
@@ -119,6 +121,19 @@ func (f *Function) Inspect() string {
 	out.WriteString("\n}")
 
 	return out.String()
+}
+
+// Function type (holds bytecode instead of nodes)
+type CompiledFunction struct {
+	Instructions bytecode.Instructions
+}
+
+func (c *CompiledFunction) Type() ObjectType {
+	return COMPILED_FUNCTION_OBJECT
+}
+
+func (c *CompiledFunction) Inspect() string {
+	return fmt.Sprintf("CompiledFunction[%p]", c)
 }
 
 // String type
