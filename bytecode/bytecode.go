@@ -29,6 +29,7 @@ const (
 	OpSetGlobal                   // 1 operand: unique number of global binding
 	OpArray                       // 1 operand: number of elements
 	OpHash                        // 1 operand: number of key + value elements
+	OpIndex                       // 0 operands
 )
 
 type Definition struct {
@@ -57,6 +58,7 @@ var definitions = map[Opcode]*Definition{
 	OpSetGlobal:     {"OpSetGlobal", []int{2}},
 	OpArray:         {"OpArray", []int{2}},
 	OpHash:          {"OpHash", []int{2}},
+	OpIndex:         {"OpIndex", []int{}},
 }
 
 // Make instruction from op and operands (Big Endian)

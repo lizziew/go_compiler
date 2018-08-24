@@ -112,6 +112,17 @@ func TestHash(t *testing.T) {
 	testVM(t, tests)
 }
 
+func TestIndex(t *testing.T) {
+	tests := []testCase{
+		{"[1,2,3][1]", 2},
+		{"[1,2,3][10-9]", 2},
+		{"[[1,1,1]][0][0]", 1},
+		{"[1,2,3][9*11]", Null},
+	}
+
+	testVM(t, tests)
+}
+
 func testVM(t *testing.T, tests []testCase) {
 	for _, test := range tests {
 		prog := parse(test.input)

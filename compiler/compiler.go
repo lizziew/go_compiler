@@ -53,6 +53,18 @@ func (c *Compiler) Compile(node ast.Node) error {
 				return err
 			}
 		}
+	case *ast.Index:
+		err := c.Compile(node.Array)
+		if err != nil {
+			return err
+		}
+
+		err = c.Compile(node.Index)
+		if err != nil {
+			return err
+		}
+
+		c.emit(bytecode.OpIndex)
 	case *ast.Hash:
 		keys := []ast.Expression{}
 		for key := range node.Pairs {

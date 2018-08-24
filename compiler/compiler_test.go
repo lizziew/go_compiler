@@ -294,6 +294,40 @@ func TestHash(t *testing.T) {
 	testCompiler(t, tests)
 }
 
+func TestIndex(t *testing.T) {
+	tests := []testCase{
+		{
+			"[1][2-2]",
+			[]interface{}{1, 2, 2},
+			[]bytecode.Instructions{
+				bytecode.Make(bytecode.OpConstant, 0),
+				bytecode.Make(bytecode.OpArray, 1),
+				bytecode.Make(bytecode.OpConstant, 1),
+				bytecode.Make(bytecode.OpConstant, 2),
+				bytecode.Make(bytecode.OpSub),
+				bytecode.Make(bytecode.OpIndex),
+				bytecode.Make(bytecode.OpPop),
+			},
+		},
+		{
+			"{1: 2}[2-1]",
+			[]interface{}{1, 2, 2, 1},
+			[]bytecode.Instructions{
+				bytecode.Make(bytecode.OpConstant, 0),
+				bytecode.Make(bytecode.OpConstant, 1),
+				bytecode.Make(bytecode.OpHash, 2),
+				bytecode.Make(bytecode.OpConstant, 2),
+				bytecode.Make(bytecode.OpConstant, 3),
+				bytecode.Make(bytecode.OpSub),
+				bytecode.Make(bytecode.OpIndex),
+				bytecode.Make(bytecode.OpPop),
+			},
+		},
+	}
+
+	testCompiler(t, tests)
+}
+
 // Helper method to parse input string
 func parse(input string) *ast.Program {
 	l := lexer.BuildLexer(input)

@@ -46,6 +46,15 @@ func (vm *VM) Run() error {
 
 		// Decode
 		switch op {
+		case bytecode.OpIndex:
+			// Execute
+			index := vm.pop()
+			left := vm.pop()
+
+			err := vm.executeIndex(left, index)
+			if err != nil {
+				return err
+			}
 		case bytecode.OpHash:
 			// Execute
 			numElements := int(bytecode.ReadUint16(vm.instructions[i+1:]))
@@ -161,6 +170,45 @@ func (vm *VM) Run() error {
 	}
 
 	return nil
+}
+
+// Helper method for index
+func (vm *VM) executeIndex(left, index object.Object) error {
+	if left.Type() == object.ARRAY_OBJECT && index.Type() == object.INTEGER_OBJECT {
+		return vm.executeArrayIndex(left, index)
+	} else if left.Type() == object.HASH_OBJECT {
+		return vm.executeHashIndex(left, index)
+	} else {
+		return fmt.Errorf("Index operator not supported for %s", left.Type())
+	}
+}
+
+// Helper method for array index
+func (vm *VM) executeArrayIndex(array, index object.Object) error {
+	arrayObject := array.(*object.Array)
+	i := index.(*object.Integer).Value
+
+	if i < 0 || i > int64(len(arrayObject.Elements)-1) {
+		return vm.push(Null)
+	} else {
+		return vm.push(arrayObject.Elements[i])
+	}
+}
+
+// Helper method for hash index
+func (vm *VM) executeHashIndex(hash, index object.Object) error {
+	hashObject := hash.(*object.Hash)
+	key, ok := index.(object.Hashable)
+	if !ok {
+		return fmt.Errorf("Unusable as hash key")
+	}
+
+	pair, ok := hashObject.Pairs[key.HashKey()]
+	if !ok {
+		return vm.push(Null)
+	} else {
+		return vm.push(pair.Value)
+	}
 }
 
 // Helper method for hashmaps
