@@ -123,6 +123,29 @@ func TestIndex(t *testing.T) {
 	testVM(t, tests)
 }
 
+func TestCallFunction(t *testing.T) {
+	tests := []testCase{
+		{
+			"let foo = fn() { 5 + 10;}; foo();",
+			15,
+		},
+		{
+			"let foo = fn() {return 99; 100;}; foo();",
+			99,
+		},
+		{
+			"let foo = fn() {}; foo();",
+			Null,
+		},
+		{
+			"let foo = fn() {1;}; let bar = fn() {foo;}; bar()();",
+			1,
+		},
+	}
+
+	testVM(t, tests)
+}
+
 func testVM(t *testing.T, tests []testCase) {
 	for _, test := range tests {
 		prog := parse(test.input)
@@ -172,7 +195,7 @@ func testExpectedObject(t *testing.T, expected interface{}, actual object.Object
 func testIntegerObject(t *testing.T, expected int64, actual object.Object) {
 	result, ok := actual.(*object.Integer)
 	if !ok {
-		t.Fatalf("Object is not an integer")
+		t.Fatalf("Object is not an integer %s", actual)
 	}
 
 	assert.Equal(t, result.Value, expected)

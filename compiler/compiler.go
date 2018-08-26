@@ -89,6 +89,13 @@ func (c *Compiler) Compile(node ast.Node) error {
 				return err
 			}
 		}
+	case *ast.Call:
+		err := c.Compile(node.Function)
+		if err != nil {
+			return err
+		}
+
+		c.emit(bytecode.OpCall)
 	case *ast.ReturnStatement:
 		err := c.Compile(node.Value)
 		if err != nil {

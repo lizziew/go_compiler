@@ -398,6 +398,28 @@ func TestFunction(t *testing.T) {
 	testCompiler(t, tests)
 }
 
+func TestFunctionCall(t *testing.T) {
+	tests := []testCase{
+		{
+			"fn() { 24 }();",
+			[]interface{}{
+				24,
+				[]bytecode.Instructions{
+					bytecode.Make(bytecode.OpConstant, 0),
+					bytecode.Make(bytecode.OpReturnValue),
+				},
+			},
+			[]bytecode.Instructions{
+				bytecode.Make(bytecode.OpConstant, 1),
+				bytecode.Make(bytecode.OpCall),
+				bytecode.Make(bytecode.OpPop),
+			},
+		},
+	}
+
+	testCompiler(t, tests)
+}
+
 func TestCompilerScope(t *testing.T) {
 	c := BuildCompiler()
 	assert.Equal(t, 0, c.scopeIndex)
