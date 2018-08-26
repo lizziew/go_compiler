@@ -145,6 +145,10 @@ func TestCallFunction(t *testing.T) {
 			"let foo = fn() { let one = 1; let two = 2; one + two; }; foo();",
 			3,
 		},
+		{
+			"let sum = fn(a, b) { a + b; }; sum(1,2);",
+			3,
+		},
 	}
 
 	testVM(t, tests)

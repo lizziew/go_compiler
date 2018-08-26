@@ -119,15 +119,14 @@ func (vm *VM) Run() error {
 				return err
 			}
 		case bytecode.OpCall:
-			fn, ok := vm.stack[vm.stackPointer-1].(*object.CompiledFunction)
-			if !ok {
-				return fmt.Errorf("Calling non-function")
-			}
+			// Get number of arguments to function
+			numArgs := bytecode.ReadUint8(instructions[ip+1:])
+			vm.currentFrame().ip += 1
 
-			frame := BuildFrame(fn, vm.stackPointer)
-			vm.pushFrame(frame)
-			// Allocate space for local bindings on stack before executing a function
-			vm.stackPointer = frame.basePointer + fn.NumLocals
+			err := vm.callFunction(int(numArgs))
+			if err != nil {
+				return err
+			}
 		case bytecode.OpIndex:
 			index := vm.pop()
 			left := vm.pop()
@@ -235,6 +234,26 @@ func (vm *VM) Run() error {
 		}
 	}
 
+	return nil
+}
+
+// Helper method for call
+func (vm *VM) callFunction(numArgs int) error {
+	fn, ok := vm.stack[vm.stackPointer-1-numArgs].(*object.CompiledFunction)
+	if !ok {
+		return fmt.Errorf("Calling non-function")
+	}
+	if numArgs != fn.NumParameters {
+		return fmt.Errorf(
+			"Wrong number of arguments. Expected=%d, Actual=%d",
+			fn.NumParameters,
+			numArgs)
+	}
+
+	// basePointer is vm.stackPointer - numArgs
+	frame := BuildFrame(fn, vm.stackPointer-numArgs)
+	vm.pushFrame(frame)
+	vm.stackPointer = frame.basePointer + fn.NumLocals
 	return nil
 }
 

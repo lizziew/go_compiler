@@ -30,7 +30,7 @@ const (
 	OpArray                       // 1 operand: number of elements
 	OpHash                        // 1 operand: number of key + value elements
 	OpIndex                       // 0 operands
-	OpCall                        // 0 operands
+	OpCall                        // 1 operand: number of arguments in call
 	OpReturnValue                 // 0 operands: return value at top of stack
 	OpReturnNothing               // 0 operands: return from current function (no value)
 	OpSetLocal                    // 1 operand: unique index of local binding
@@ -64,7 +64,7 @@ var definitions = map[Opcode]*Definition{
 	OpArray:         {"OpArray", []int{2}},
 	OpHash:          {"OpHash", []int{2}},
 	OpIndex:         {"OpIndex", []int{}},
-	OpCall:          {"OpCall", []int{}},
+	OpCall:          {"OpCall", []int{1}},
 	OpReturnValue:   {"OpReturnValue", []int{}},
 	OpReturnNothing: {"OpReturnNothing", []int{}},
 	OpGetLocal:      {"OpGetLocal", []int{1}},

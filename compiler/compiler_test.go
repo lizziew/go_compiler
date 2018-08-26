@@ -411,7 +411,24 @@ func TestFunctionCall(t *testing.T) {
 			},
 			[]bytecode.Instructions{
 				bytecode.Make(bytecode.OpConstant, 1),
-				bytecode.Make(bytecode.OpCall),
+				bytecode.Make(bytecode.OpCall, 0),
+				bytecode.Make(bytecode.OpPop),
+			},
+		}, {
+			"let foo = fn(a){ a }; foo(24);",
+			[]interface{}{
+				[]bytecode.Instructions{
+					bytecode.Make(bytecode.OpGetLocal, 0),
+					bytecode.Make(bytecode.OpReturnValue),
+				},
+				24,
+			},
+			[]bytecode.Instructions{
+				bytecode.Make(bytecode.OpConstant, 0),
+				bytecode.Make(bytecode.OpSetGlobal, 0),
+				bytecode.Make(bytecode.OpGetGlobal, 0),
+				bytecode.Make(bytecode.OpConstant, 1),
+				bytecode.Make(bytecode.OpCall, 1),
 				bytecode.Make(bytecode.OpPop),
 			},
 		},

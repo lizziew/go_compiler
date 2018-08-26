@@ -125,8 +125,9 @@ func (f *Function) Inspect() string {
 
 // Function type (holds bytecode instead of nodes)
 type CompiledFunction struct {
-	Instructions bytecode.Instructions
-	NumLocals    int // Number of local bindings this function will create
+	Instructions  bytecode.Instructions // Instructions for function body
+	NumLocals     int                   // Number of local bindings this function will create
+	NumParameters int                   // Number of parameters of function
 }
 
 func (c *CompiledFunction) Type() ObjectType {
