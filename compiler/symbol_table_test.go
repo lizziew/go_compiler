@@ -42,3 +42,31 @@ func TestResolveGlobal(t *testing.T) {
 		}
 	}
 }
+
+func TestResolveLocal(t *testing.T) {
+	global := BuildSymbolTable()
+	global.Define("a")
+	global.Define("b")
+
+	local := BuildInnerSymbolTable(global)
+	local.Define("c")
+	local.Define("d")
+
+	expected := []Symbol{
+		{"a", GlobalScope, 0},
+		{"b", GlobalScope, 1},
+		{"c", LocalScope, 0},
+		{"d", LocalScope, 1},
+	}
+
+	for _, e := range expected {
+		result, ok := local.Resolve(e.Name)
+		if !ok {
+			t.Fatalf("not resolvable")
+		}
+
+		if result != e {
+			t.Fatalf("resolve error")
+		}
+	}
+}

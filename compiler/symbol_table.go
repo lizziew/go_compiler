@@ -5,6 +5,7 @@ type SymbolScope string
 
 const (
 	GlobalScope SymbolScope = "GLOBAL"
+	LocalScope  SymbolScope = "LOCAL"
 )
 
 // Stores Name, Scope, and Index for a given symbol
@@ -16,6 +17,7 @@ type Symbol struct {
 
 // Associate string identifiers with scope and unique number
 type SymbolTable struct {
+	Outer          *SymbolTable
 	store          map[string]Symbol
 	numDefinitions int
 }
@@ -25,9 +27,24 @@ func BuildSymbolTable() *SymbolTable {
 	return &SymbolTable{store: s}
 }
 
+func BuildInnerSymbolTable(outer *SymbolTable) *SymbolTable {
+	inner := BuildSymbolTable()
+	inner.Outer = outer
+	return inner
+}
+
 // Create and store a symbol from an identifier
 func (s *SymbolTable) Define(name string) Symbol {
-	symbol := Symbol{name, GlobalScope, s.numDefinitions}
+	symbol := Symbol{Name: name, Index: s.numDefinitions}
+
+	// Set scope
+	if s.Outer == nil {
+		// Is outer symbol table
+		symbol.Scope = GlobalScope
+	} else {
+		// Is inner symbol table
+		symbol.Scope = LocalScope
+	}
 
 	s.store[name] = symbol
 	s.numDefinitions++
@@ -38,5 +55,12 @@ func (s *SymbolTable) Define(name string) Symbol {
 // Retrieve a symbol for an identifier
 func (s *SymbolTable) Resolve(name string) (Symbol, bool) {
 	obj, ok := s.store[name]
-	return obj, ok
+
+	// Check outer environment if exists
+	if !ok && s.Outer != nil {
+		obj, ok := s.Outer.Resolve(name)
+		return obj, ok
+	} else {
+		return obj, ok
+	}
 }

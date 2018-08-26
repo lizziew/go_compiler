@@ -141,6 +141,10 @@ func TestCallFunction(t *testing.T) {
 			"let foo = fn() {1;}; let bar = fn() {foo;}; bar()();",
 			1,
 		},
+		{
+			"let foo = fn() { let one = 1; let two = 2; one + two; }; foo();",
+			3,
+		},
 	}
 
 	testVM(t, tests)

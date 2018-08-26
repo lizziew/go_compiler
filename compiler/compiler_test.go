@@ -420,10 +420,34 @@ func TestFunctionCall(t *testing.T) {
 	testCompiler(t, tests)
 }
 
+func TestLocal(t *testing.T) {
+	tests := []testCase{
+		{
+			"fn() { let num = 55; num}",
+			[]interface{}{
+				55,
+				[]bytecode.Instructions{
+					bytecode.Make(bytecode.OpConstant, 0),
+					bytecode.Make(bytecode.OpSetLocal, 0),
+					bytecode.Make(bytecode.OpGetLocal, 0),
+					bytecode.Make(bytecode.OpReturnValue),
+				},
+			},
+			[]bytecode.Instructions{
+				bytecode.Make(bytecode.OpConstant, 1),
+				bytecode.Make(bytecode.OpPop),
+			},
+		},
+	}
+
+	testCompiler(t, tests)
+}
+
 func TestCompilerScope(t *testing.T) {
 	c := BuildCompiler()
 	assert.Equal(t, 0, c.scopeIndex)
 
+	globalSymbolTable := c.symbolTable
 	c.emit(bytecode.OpMul)
 
 	c.enterScope()
@@ -431,9 +455,18 @@ func TestCompilerScope(t *testing.T) {
 	c.emit(bytecode.OpSub)
 	assert.Equal(t, 1, len(c.scopes[c.scopeIndex].instructions))
 	assert.Equal(t, bytecode.OpSub, c.scopes[c.scopeIndex].lastInstruction.Opcode)
+	if c.symbolTable.Outer != globalSymbolTable {
+		t.Fatalf("Compiler didn't enclose symboltable")
+	}
 	c.leaveScope()
 
 	assert.Equal(t, 0, c.scopeIndex)
+	if c.symbolTable != globalSymbolTable {
+		t.Fatalf("Compiler didn't restore global symboltable")
+	}
+	if c.symbolTable.Outer != nil {
+		t.Fatalf("Compiler modified global symbol table incorrectly")
+	}
 	c.emit(bytecode.OpAdd)
 	assert.Equal(t, 2, len(c.scopes[c.scopeIndex].instructions))
 	assert.Equal(t, bytecode.OpAdd, c.scopes[c.scopeIndex].lastInstruction.Opcode)

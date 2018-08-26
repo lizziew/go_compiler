@@ -29,7 +29,7 @@ type VM struct {
 
 func BuildVM(bytecode *compiler.Bytecode) *VM {
 	mainFn := &object.CompiledFunction{Instructions: bytecode.Instructions}
-	mainFrame := BuildFrame(mainFn)
+	mainFrame := BuildFrame(mainFn, 0)
 	frames := make([]*Frame, frameCapacity)
 	frames[0] = mainFrame
 
@@ -87,17 +87,33 @@ func (vm *VM) Run() error {
 
 		// Decode & Execute
 		switch op {
+		case bytecode.OpGetLocal:
+			localIndex := bytecode.ReadUint8(instructions[ip+1:])
+			vm.currentFrame().ip += 1
+			frame := vm.currentFrame()
+			err := vm.push(vm.stack[frame.basePointer+int(localIndex)])
+			if err != nil {
+				return err
+			}
+		case bytecode.OpSetLocal:
+			// Get index of binding
+			localIndex := bytecode.ReadUint8(instructions[ip+1:])
+			vm.currentFrame().ip += 1
+			// Get current frame
+			frame := vm.currentFrame()
+			// Save the binding to the location on the stack
+			vm.stack[frame.basePointer+int(localIndex)] = vm.pop()
 		case bytecode.OpReturnNothing:
-			vm.popFrame()
-			vm.pop()
+			frame := vm.popFrame()
+			vm.stackPointer = frame.basePointer - 1 // Reset back to base pointer and also pop function
 			err := vm.push(Null)
 			if err != nil {
 				return err
 			}
 		case bytecode.OpReturnValue:
 			returnValue := vm.pop() // Pop return value off of stack
-			vm.popFrame()
-			vm.pop() // Pop just called CompiledFunction off of stack
+			frame := vm.popFrame()
+			vm.stackPointer = frame.basePointer - 1 // Reset back to base pointer and also pop function
 			err := vm.push(returnValue)
 			if err != nil {
 				return err
@@ -108,8 +124,10 @@ func (vm *VM) Run() error {
 				return fmt.Errorf("Calling non-function")
 			}
 
-			frame := BuildFrame(fn)
+			frame := BuildFrame(fn, vm.stackPointer)
 			vm.pushFrame(frame)
+			// Allocate space for local bindings on stack before executing a function
+			vm.stackPointer = frame.basePointer + fn.NumLocals
 		case bytecode.OpIndex:
 			index := vm.pop()
 			left := vm.pop()

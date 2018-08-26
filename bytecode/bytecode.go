@@ -25,15 +25,16 @@ const (
 	OpJumpNotTruthy               // 1 operand: jump offset if stack top is false, not null
 	OpJump                        // 1 operand: jump offset)
 	OpNull                        // 0 operands
-	OpGetGlobal                   // 1 operand: unique number of global binding
-	OpSetGlobal                   // 1 operand: unique number of global binding
+	OpGetGlobal                   // 1 operand: unique index of global binding
+	OpSetGlobal                   // 1 operand: unique index of global binding
 	OpArray                       // 1 operand: number of elements
 	OpHash                        // 1 operand: number of key + value elements
 	OpIndex                       // 0 operands
 	OpCall                        // 0 operands
 	OpReturnValue                 // 0 operands: return value at top of stack
 	OpReturnNothing               // 0 operands: return from current function (no value)
-
+	OpSetLocal                    // 1 operand: unique index of local binding
+	OpGetLocal                    // 1 operand: unique index of local binding
 )
 
 type Definition struct {
@@ -66,6 +67,8 @@ var definitions = map[Opcode]*Definition{
 	OpCall:          {"OpCall", []int{}},
 	OpReturnValue:   {"OpReturnValue", []int{}},
 	OpReturnNothing: {"OpReturnNothing", []int{}},
+	OpGetLocal:      {"OpGetLocal", []int{1}},
+	OpSetLocal:      {"OpSetLocal", []int{1}},
 }
 
 // Make instruction from op and operands (Big Endian)
@@ -91,6 +94,8 @@ func Make(op Opcode, operands ...int) []byte {
 		width := definition.OperandWidths[i]
 
 		switch width {
+		case 1:
+			instruction[offset] = byte(o)
 		case 2:
 			binary.BigEndian.PutUint16(instruction[offset:], uint16(o))
 		}
@@ -103,6 +108,10 @@ func Make(op Opcode, operands ...int) []byte {
 
 func ReadUint16(i Instructions) uint16 {
 	return binary.BigEndian.Uint16(i)
+}
+
+func ReadUint8(i Instructions) uint8 {
+	return uint8(i[0])
 }
 
 // For debugging
