@@ -22,6 +22,9 @@ func StartLoop(in io.Reader, out io.Writer) {
 	constants := []object.Object{}
 	globals := make([]object.Object, vm.GlobalCapacity)
 	symbolTable := compiler.BuildSymbolTable()
+	for i, v := range object.Builtins {
+		symbolTable.DefineBuiltin(i, v.Name)
+	}
 
 	for {
 		fmt.Printf(PROMPT)

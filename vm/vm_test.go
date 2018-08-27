@@ -154,6 +154,15 @@ func TestCallFunction(t *testing.T) {
 	testVM(t, tests)
 }
 
+func TestBuiltin(t *testing.T) {
+	tests := []testCase{
+		{`len("four")`, 4},
+		{"len([1,2,3])", 3},
+	}
+
+	testVM(t, tests)
+}
+
 func testVM(t *testing.T, tests []testCase) {
 	for _, test := range tests {
 		prog := parse(test.input)

@@ -35,6 +35,7 @@ const (
 	OpReturnNothing               // 0 operands: return from current function (no value)
 	OpSetLocal                    // 1 operand: unique index of local binding
 	OpGetLocal                    // 1 operand: unique index of local binding
+	OpGetBuiltin                  // 1 operand: index of builtin function
 )
 
 type Definition struct {
@@ -69,6 +70,7 @@ var definitions = map[Opcode]*Definition{
 	OpReturnNothing: {"OpReturnNothing", []int{}},
 	OpGetLocal:      {"OpGetLocal", []int{1}},
 	OpSetLocal:      {"OpSetLocal", []int{1}},
+	OpGetBuiltin:    {"OpGetBuiltin", []int{1}},
 }
 
 // Make instruction from op and operands (Big Endian)

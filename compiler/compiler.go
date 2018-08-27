@@ -45,11 +45,16 @@ func BuildCompiler() *Compiler {
 		secondToLastInstruction: EmittedInstruction{},
 	}
 
+	symbolTable := BuildSymbolTable()
+	for i, v := range object.Builtins {
+		symbolTable.DefineBuiltin(i, v.Name)
+	}
+
 	return &Compiler{
 		constants:   []object.Object{},
 		scopes:      []CompilationScope{mainScope},
 		scopeIndex:  0,
-		symbolTable: BuildSymbolTable(),
+		symbolTable: symbolTable,
 	}
 }
 
@@ -213,8 +218,10 @@ func (c *Compiler) Compile(node ast.Node) error {
 
 		if symbol.Scope == GlobalScope {
 			c.emit(bytecode.OpGetGlobal, symbol.Index)
-		} else {
+		} else if symbol.Scope == LocalScope {
 			c.emit(bytecode.OpGetLocal, symbol.Index)
+		} else if symbol.Scope == BuiltinScope {
+			c.emit(bytecode.OpGetBuiltin, symbol.Index)
 		}
 	case *ast.ExpressionStatement:
 		err := c.Compile(node.Expression)

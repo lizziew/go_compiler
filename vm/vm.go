@@ -87,6 +87,14 @@ func (vm *VM) Run() error {
 
 		// Decode & Execute
 		switch op {
+		case bytecode.OpGetBuiltin:
+			builtinIndex := bytecode.ReadUint8(instructions[ip+1:])
+			vm.currentFrame().ip += 1
+			definition := object.Builtins[builtinIndex]
+			err := vm.push(definition.Builtin)
+			if err != nil {
+				return err
+			}
 		case bytecode.OpGetLocal:
 			localIndex := bytecode.ReadUint8(instructions[ip+1:])
 			vm.currentFrame().ip += 1
@@ -239,22 +247,34 @@ func (vm *VM) Run() error {
 
 // Helper method for call
 func (vm *VM) callFunction(numArgs int) error {
-	fn, ok := vm.stack[vm.stackPointer-1-numArgs].(*object.CompiledFunction)
-	if !ok {
+	fn := vm.stack[vm.stackPointer-1-numArgs]
+	switch fn := fn.(type) {
+	case *object.CompiledFunction:
+		if numArgs != fn.NumParameters {
+			return fmt.Errorf(
+				"Wrong number of arguments. Expected=%d, Actual=%d",
+				fn.NumParameters,
+				numArgs)
+		}
+		// basePointer is vm.stackPointer - numArgs
+		frame := BuildFrame(fn, vm.stackPointer-numArgs)
+		vm.pushFrame(frame)
+		vm.stackPointer = frame.basePointer + fn.NumLocals
+		return nil
+	case *object.BuiltIn:
+		args := vm.stack[vm.stackPointer-numArgs : vm.stackPointer]
+		result := fn.Function(args...)
+		vm.stackPointer = vm.stackPointer - numArgs - 1
+		if result != nil {
+			vm.push(result)
+		} else {
+			vm.push(Null)
+		}
+		return nil
+	default:
 		return fmt.Errorf("Calling non-function")
 	}
-	if numArgs != fn.NumParameters {
-		return fmt.Errorf(
-			"Wrong number of arguments. Expected=%d, Actual=%d",
-			fn.NumParameters,
-			numArgs)
-	}
 
-	// basePointer is vm.stackPointer - numArgs
-	frame := BuildFrame(fn, vm.stackPointer-numArgs)
-	vm.pushFrame(frame)
-	vm.stackPointer = frame.basePointer + fn.NumLocals
-	return nil
 }
 
 // Helper method for index

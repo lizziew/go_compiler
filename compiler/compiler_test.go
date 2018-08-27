@@ -490,6 +490,28 @@ func TestCompilerScope(t *testing.T) {
 	assert.Equal(t, bytecode.OpMul, c.scopes[c.scopeIndex].secondToLastInstruction.Opcode)
 }
 
+func TestBuiltin(t *testing.T) {
+	tests := []testCase{
+		{
+			"len([]); push([], 1);",
+			[]interface{}{1},
+			[]bytecode.Instructions{
+				bytecode.Make(bytecode.OpGetBuiltin, 0),
+				bytecode.Make(bytecode.OpArray, 0),
+				bytecode.Make(bytecode.OpCall, 1),
+				bytecode.Make(bytecode.OpPop),
+				bytecode.Make(bytecode.OpGetBuiltin, 4),
+				bytecode.Make(bytecode.OpArray, 0),
+				bytecode.Make(bytecode.OpConstant, 0),
+				bytecode.Make(bytecode.OpCall, 2),
+				bytecode.Make(bytecode.OpPop),
+			},
+		},
+	}
+
+	testCompiler(t, tests)
+}
+
 // Helper method to parse input string
 func parse(input string) *ast.Program {
 	l := lexer.BuildLexer(input)
