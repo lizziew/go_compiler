@@ -58,9 +58,9 @@ func main() {
 		}
 
 		duration = time.Since(start)
-		result = machine.LastPoppedStackElem()
+		result = machine.LastPopped()
 	} else {
-		env := object.NewEnvironment()
+		env := object.BuildEnvironment()
 		start := time.Now()
 		result = evaluator.Eval(program, env)
 		duration = time.Since(start)
