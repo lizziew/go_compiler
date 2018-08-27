@@ -4,7 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"go_interpreter/compiler"
-	// "go_interpreter/evaluator"
+	"go_interpreter/evaluator"
 	"go_interpreter/lexer"
 	"go_interpreter/object"
 	"go_interpreter/parser"
@@ -14,17 +14,19 @@ import (
 
 const PROMPT = ">> "
 
-func StartLoop(in io.Reader, out io.Writer) {
+func StartLoop(engine *string, in io.Reader, out io.Writer) {
 	scanner := bufio.NewScanner(in)
 
-	// env := object.BuildEnvironment()
-
+	// Compiler
 	constants := []object.Object{}
 	globals := make([]object.Object, vm.GlobalCapacity)
 	symbolTable := compiler.BuildSymbolTable()
 	for i, v := range object.Builtins {
 		symbolTable.DefineBuiltin(i, v.Name)
 	}
+
+	// Interpreter
+	env := object.BuildEnvironment()
 
 	for {
 		fmt.Printf(PROMPT)
@@ -48,31 +50,33 @@ func StartLoop(in io.Reader, out io.Writer) {
 			continue
 		}
 
-		// Evaluator
-		/*result := evaluator.Eval(prog, env)
-		if result != nil {
-			io.WriteString(out, result.Inspect())
+		if *engine == "vm" {
+			// Compiler
+			c := compiler.BuildStatefulCompiler(symbolTable, constants)
+			err := c.Compile(prog)
+			if err != nil {
+				fmt.Fprintf(out, "Compile-time error: %s\n", err)
+			}
+
+			// VM
+			bytecode := c.Bytecode()
+			constants = bytecode.Constants
+			machine := vm.BuildStatefulVM(bytecode, globals)
+			err = machine.Run()
+			if err != nil {
+				fmt.Fprintf(out, "Run-time error: %s\n", err)
+			}
+			lastPopped := machine.LastPopped()
+			io.WriteString(out, lastPopped.Inspect())
 			io.WriteString(out, "\n")
-		}*/
-
-		// Compiler
-		c := compiler.BuildStatefulCompiler(symbolTable, constants)
-		err := c.Compile(prog)
-		if err != nil {
-			fmt.Fprintf(out, "Compile-time error: %s\n", err)
+		} else {
+			// Evaluator
+			result := evaluator.Eval(prog, env)
+			if result != nil {
+				io.WriteString(out, result.Inspect())
+				io.WriteString(out, "\n")
+			}
 		}
-
-		// VM
-		bytecode := c.Bytecode()
-		constants = bytecode.Constants
-		machine := vm.BuildStatefulVM(bytecode, globals)
-		err = machine.Run()
-		if err != nil {
-			fmt.Fprintf(out, "Run-time error: %s\n", err)
-		}
-		lastPopped := machine.LastPopped()
-		io.WriteString(out, lastPopped.Inspect())
-		io.WriteString(out, "\n")
 	}
 }
 
