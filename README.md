@@ -4,7 +4,7 @@ Interpreter and compiler for toy language
 
 Written in Go
 
-See http://datasieve.blogspot.com/2018/08/building-toy-language-interpreter-in-go.html for more details
+See http://datasieve.blogspot.com/2018/08/building-toy-language-interpreter-in-go.html and http://datasieve.blogspot.com/2018/08/building-toy-language-compiler-in-go.html for more details
 
 Based on https://interpreterbook.com/ 
 
